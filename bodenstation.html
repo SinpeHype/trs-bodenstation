@@ -1,0 +1,4874 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+<meta name="description" content="TRS Bodenstation: Telemetrie, geführter Startcheck und Flugauswertung."><title>TRS — Bodenstation</title>
+<style>
+
+:root {
+  color-scheme: light;
+  --bg: #f1f3f3;
+  --paper: #fff;
+  --subtle: #f7f9f9;
+  --ink: #1e2c33;
+  --muted: #64737b;
+  --line: #d9e0e3;
+  --strong: #b9c5cb;
+  --accent: #245f7c;
+  --tint: #eaf2f6;
+  --ok: #27724c;
+  --ok-bg: #eef6f0;
+  --warn: #a65326;
+  --warn-bg: #fcf2e9;
+  --grid: #e9eef0;
+  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #151c21;
+  --paper: #1e282f;
+  --subtle: #253139;
+  --ink: #e4edf2;
+  --muted: #a5b4bd;
+  --line: #374750;
+  --strong: #566c78;
+  --accent: #8cbfd6;
+  --tint: #2b414e;
+  --ok: #8dc6a2;
+  --ok-bg: #293f33;
+  --warn: #e4ad80;
+  --warn-bg: #453428;
+  --grid: #2c3b44
+}
+* {
+  box-sizing: border-box
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased
+}
+[hidden] {
+  display: none !important
+}
+button,
+input,
+select {
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--strong);
+  border-radius: 3px;
+  background: var(--paper)
+}
+button {
+  cursor: pointer;
+  min-height: 34px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  line-height: 1.25
+}
+button:hover:not(:disabled) {
+  background: var(--subtle);
+  border-color: var(--muted)
+}
+button:disabled {
+  opacity: .4;
+  cursor: not-allowed
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px
+}
+.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper)
+}
+[data-theme="dark"] .primary {
+  color: #142630
+}
+button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(.93)
+}
+.quiet {
+  background: transparent;
+  border-color: var(--line)
+}
+.icon-button {
+  width: 34px;
+  padding: 7px
+}
+.text-button {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 10px;
+  padding: 3px 0;
+  min-height: 24px
+}
+.icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0
+}
+.mono,
+output,
+time,
+.number {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums
+}
+.muted {
+  color: var(--muted)
+}
+.eyebrow {
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 1.3px;
+  text-transform: uppercase
+}
+.small {
+  font-size: 11px
+}
+.ok {
+  color: var(--ok)
+}
+.warn {
+  color: var(--warn)
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0
+}
+.state {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 10px
+}
+.state.good {
+  color: var(--ok)
+}
+.state.bad {
+  color: var(--warn)
+}
+.state.live {
+  color: var(--accent)
+}
+.badge {
+  font: 9px var(--mono);
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap
+}
+.unit {
+  font: 12px var(--mono);
+  color: var(--muted);
+  margin-left: 5px;
+  letter-spacing: 0
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0
+}
+h1 {
+  font-size: 26px;
+  font-weight: 550;
+  line-height: 1.15;
+  letter-spacing: -.8px
+}
+h2 {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 1.15px;
+  text-transform: uppercase
+}
+h3 {
+  font-weight: 550
+}
+a {
+  color: var(--accent)
+}
+.app-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line)
+}
+.topbar {
+  height: 60px;
+  padding: 0 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 31px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 600 13px var(--mono);
+  letter-spacing: -.8px
+}
+.brand-name {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  font-weight: 650
+}
+.brand-name small {
+  font: 9px var(--mono);
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  margin-left: 7px;
+  letter-spacing: 0;
+  color: var(--muted)
+}
+.brand-sub {
+  font: 9px var(--mono);
+  margin-top: 2px;
+  color: var(--muted);
+  letter-spacing: .3px
+}
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+  margin-left: auto
+}
+.header-status .state {
+  font-size: 11px
+}
+.header-last {
+  font-size: 10px;
+  color: var(--muted);
+  padding-left: 18px;
+  border-left: 1px solid var(--line)
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto
+}
+.header-actions .primary {
+  font-size: 11px
+}
+.tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  height: 46px;
+  padding: 0 25px;
+  border-top: 1px solid var(--line)
+}
+.tabs {
+  display: flex;
+  gap: 27px;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none
+}
+.tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 1px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  gap: 9px
+}
+.tab:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink)
+}
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600
+}
+.tab-index {
+  font: 9px var(--mono);
+  opacity: .7
+}
+.tab-check-count {
+  font: 9px var(--mono);
+  padding: 1px 4px;
+  background: var(--subtle);
+  border: 1px solid var(--line);
+  color: var(--muted)
+}
+.nav-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-shrink: 0
+}
+.clock {
+  font: 10px var(--mono);
+  color: var(--muted)
+}
+.settings-tab {
+  gap: 6px
+}
+.workspace {
+  max-width: 1640px;
+  margin: auto;
+  padding: 0 25px
+}
+.view {
+  min-height: calc(100dvh - 139px)
+}
+.view-head {
+  height: 93px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px
+}
+.view-head .eyebrow {
+  color: var(--muted);
+  margin-bottom: 7px
+}
+.view-description {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px
+}
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px
+}
+.head-counter {
+  font: 10px var(--mono);
+  color: var(--muted)
+}
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  min-width: 0
+}
+.panel-head {
+  height: 43px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--line)
+}
+.panel-head .muted {
+  font-size: 10px
+}
+.panel-foot {
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px
+}
+.app-footer {
+  max-width: 1640px;
+  margin: auto;
+  min-height: 33px;
+  padding: 8px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 9px;
+  color: var(--muted)
+}
+.footer-security {
+  display: flex;
+  align-items: center;
+  gap: 6px
+}
+.footer-security .icon {
+  width: 11px;
+  height: 11px
+}
+.footer-version {
+  font: 9px var(--mono)
+}
+.content-height {
+  height: clamp(470px, calc(100dvh - 249px), 750px)
+}
+/* All six data sources share one bounded screen. */
+.systems-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 16px
+}
+.sensor-bank {
+  display: flex;
+  flex-direction: column
+}
+.sensor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: none
+}
+.sensor {
+  padding: 14px 18px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center
+}
+.sensor:nth-child(even) {
+  border-left: 1px solid var(--line)
+}
+.sensor:nth-child(n+3) {
+  border-top: 1px solid var(--line)
+}
+.sensor-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px
+}
+.sensor-name {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px
+}
+.sensor-index {
+  font: 9px var(--mono);
+  color: var(--muted)
+}
+.sensor-value {
+  font: 34px/1.3 var(--mono);
+  letter-spacing: -1.1px;
+  margin: 7px 0;
+  white-space: nowrap
+}
+.sensor-value.text-value {
+  font-size: 25px;
+  letter-spacing: -.5px
+}
+.sensor-sub {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 10px
+}
+.sensor-sub output {
+  font-size: 10px;
+  color: var(--ink)
+}
+.sensor-sub label {
+  margin-right: 5px
+}
+.systems-aside {
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  align-content: start;
+  gap: 12px;
+  min-width: 0
+}
+.receiver-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px
+}
+.receiver-symbol {
+  width: 41px;
+  height: 41px;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  flex-shrink: 0
+}
+.receiver-symbol .icon {
+  width: 22px;
+  height: 22px
+}
+.receiver-content strong {
+  font-size: 12px;
+  font-weight: 550
+}
+.receiver-content p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px
+}
+.receiver-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--line)
+}
+.receiver-stats>div {
+  padding: 9px 15px
+}
+.receiver-stats>div+div {
+  border-left: 1px solid var(--line)
+}
+.receiver-stats span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted)
+}
+.receiver-stats output {
+  display: block;
+  font-size: 12px;
+  margin-top: 3px
+}
+.hardware-content {
+  padding: 3px 15px
+}
+.data-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  font-size: 11px
+}
+.data-line>span:first-child {
+  color: var(--muted)
+}
+.data-line output {
+  font-size: 10px;
+  text-align: right
+}
+.hardware-divider {
+  border-top: 1px solid var(--line);
+  margin: 4px 0
+}
+.pyro-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 37px
+}
+.pyro-line-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px
+}
+.pyro-line-label .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--warn)
+}
+.pyro-line output {
+  font: 10px var(--mono);
+  color: var(--muted)
+}
+.pyro-line output.ok {
+  color: var(--ok)
+}
+.pyro-line output.warn {
+  color: var(--warn)
+}
+.profile-line {
+  border-top: 1px solid var(--line);
+  padding: 10px 15px;
+  color: var(--muted);
+  font: 9px var(--mono)
+}
+.readiness-link {
+  background: var(--subtle);
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px
+}
+.readiness-link strong {
+  font-size: 12px;
+  font-weight: 550
+}
+.readiness-link p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px
+}
+.readiness-link button {
+  width: 30px;
+  min-height: 30px;
+  padding: 6px
+}
+/* A guided challenge/response procedure, with independently evaluated hardware evidence. */
+.check-layout {
+  display: grid;
+  grid-template-columns: 218px minmax(0, 1fr) 246px;
+  gap: 16px
+}
+.procedure-rail {
+  padding-top: 17px;
+  display: flex;
+  flex-direction: column
+}
+.rail-title {
+  padding: 0 16px 15px;
+  color: var(--muted)
+}
+.procedure-step {
+  width: 100%;
+  min-height: 70px;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  justify-content: flex-start;
+  padding: 12px 15px;
+  gap: 12px;
+  text-align: left;
+  position: relative
+}
+.procedure-step+.procedure-step:before {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: 14px;
+  left: 28px;
+  top: -7px;
+  background: var(--line)
+}
+.procedure-step[aria-current="step"] {
+  background: var(--tint);
+  color: var(--accent);
+  border-left-color: var(--accent)
+}
+.step-circle {
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--strong);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 10px var(--mono);
+  flex-shrink: 0
+}
+.procedure-step[aria-current="step"] .step-circle {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper)
+}
+[data-theme="dark"] .procedure-step[aria-current="step"] .step-circle {
+  color: #162831
+}
+.procedure-step.complete .step-circle {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+  color: var(--ok)
+}
+.procedure-step strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 550
+}
+.procedure-step small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px
+}
+.rail-footer {
+  margin: 16px 16px 0;
+  padding: 11px 0 13px;
+  border-top: 1px solid var(--line);
+  font-size: 9px;
+  color: var(--muted)
+}
+.procedure-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.procedure-content {
+  padding: 24px 25px;
+  flex: none;
+  overflow: auto;
+  scrollbar-width: thin
+}
+.procedure-kicker {
+  color: var(--accent);
+  font: 10px var(--mono);
+  letter-spacing: 1px;
+  margin-bottom: 12px
+}
+.procedure-content h3 {
+  font-size: 25px;
+  letter-spacing: -.6px;
+  line-height: 1.2
+}
+.procedure-description {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 520px;
+  margin: 10px 0 20px
+}
+.auto-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 38px;
+  border-bottom: 1px solid var(--line)
+}
+.auto-row:last-child {
+  border: 0
+}
+.auto-number {
+  font: 9px var(--mono);
+  color: var(--muted)
+}
+.auto-row strong {
+  font-size: 11px;
+  font-weight: 500
+}
+.auto-row .state {
+  font-size: 9px
+}
+.procedure-controls {
+  padding: 13px 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px
+}
+.procedure-controls button {
+  font-size: 11px
+}
+.procedure-controls span {
+  font: 9px var(--mono);
+  color: var(--muted)
+}
+.response-row {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  justify-content: flex-start;
+  gap: 13px;
+  padding: 18px 0;
+  min-height: 76px
+}
+.response-row:last-child {
+  border-bottom: 1px solid var(--line)
+}
+.response-number {
+  font: 11px var(--mono);
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  flex-shrink: 0
+}
+.response-text {
+  flex: 1
+}
+.response-text strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 550
+}
+.response-text small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--muted)
+}
+.response-action {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--accent);
+  white-space: nowrap
+}
+.response-row.confirmed .response-number {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+  color: var(--ok)
+}
+.response-row.confirmed .response-action,
+.response-row.confirmed .response-text strong {
+  color: var(--ok)
+}
+.response-row:hover:not(:disabled) {
+  background: transparent
+}
+.procedure-side {
+  display: flex;
+  flex-direction: column
+}
+.clearance-top {
+  padding: 18px 17px;
+  border-bottom: 1px solid var(--line)
+}
+.clearance-top .eyebrow {
+  color: var(--muted)
+}
+.clearance-word {
+  font-size: 27px;
+  font-weight: 550;
+  letter-spacing: -.7px;
+  margin: 13px 0 5px;
+  line-height: 1.2
+}
+.clearance-top p {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--muted)
+}
+.clearance-progress {
+  padding: 16px 17px
+}
+.progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  margin-bottom: 9px
+}
+.progress-heading output {
+  font-size: 10px;
+  color: var(--muted)
+}
+.progress-segments {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 19px
+}
+.progress-segments i {
+  height: 4px;
+  flex: 1;
+  background: var(--line)
+}
+.progress-segments i.filled {
+  background: var(--ok)
+}
+.clearance-blockers {
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--muted);
+  padding-left: 15px;
+  margin: 0
+}
+.clearance-note {
+  margin-top: 0;
+  padding: 13px 17px;
+  background: var(--subtle);
+  border-top: 1px solid var(--line);
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.7
+}
+.clearance-note .icon {
+  width: 12px;
+  height: 12px;
+  vertical-align: -2px;
+  margin-right: 4px
+}
+.completion-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--line);
+  margin: 18px 0
+}
+.completion-summary div {
+  padding: 14px
+}
+.completion-summary div+div {
+  border-left: 1px solid var(--line)
+}
+.completion-summary span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 4px
+}
+.completion-summary output {
+  font-size: 20px
+}
+.hold-button {
+  width: 100%;
+  min-height: 47px;
+  margin-top: 18px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate
+}
+.hold-button:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  right: auto;
+  width: var(--hold, 0%);
+  background: currentColor;
+  opacity: .18;
+  z-index: -1
+}
+.hold-hint {
+  text-align: center;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 8px
+}
+.signed-off {
+  padding: 16px;
+  border: 1px solid var(--ok);
+  background: var(--ok-bg);
+  color: var(--ok);
+  margin-top: 16px;
+  font-size: 12px
+}
+.signed-off p {
+  font: 10px var(--mono);
+  margin-top: 6px
+}
+.flight-view-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px
+}
+.phase-strip {
+  display: flex;
+  align-items: center;
+  min-height: 59px;
+  background: var(--paper);
+  border: 1px solid var(--line)
+}
+.phase-track {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0 15px;
+  gap: 10px
+}
+.phase {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10px
+}
+.phase-number {
+  width: 19px;
+  height: 19px;
+  border: 1px solid var(--strong);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 9px var(--mono);
+  flex-shrink: 0
+}
+.phase.active {
+  color: var(--accent);
+  font-weight: 600
+}
+.phase.active .phase-number {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper)
+}
+[data-theme="dark"] .phase.active .phase-number {
+  color: #162831
+}
+.phase.done .phase-number {
+  border-color: var(--muted)
+}
+.flight-timer {
+  min-width: 154px;
+  padding: 9px 17px;
+  border-left: 1px solid var(--line)
+}
+.flight-timer span {
+  display: block;
+  font-size: 8px;
+  letter-spacing: .8px;
+  color: var(--muted)
+}
+.flight-timer output {
+  display: block;
+  font-size: 19px;
+  white-space: nowrap;
+  margin-top: 2px
+}
+.flight-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0
+}
+.flight-telemetry {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 15px 0
+}
+.metric {
+  padding: 0 18px;
+  min-width: 0
+}
+.metric+.metric {
+  border-left: 1px solid var(--line)
+}
+.metric-label {
+  font-size: 10px;
+  color: var(--muted)
+}
+.metric .number {
+  font: 31px/1.3 var(--mono);
+  letter-spacing: -1px;
+  white-space: nowrap;
+  margin: 4px 0
+}
+.metric:first-child .number {
+  color: var(--accent)
+}
+.metric-max {
+  font: 9px var(--mono);
+  color: var(--muted)
+}
+.flight-charts {
+  padding: 0 12px 0 7px;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1.3fr 1fr 1fr
+}
+.chart-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  min-height: 0;
+  align-items: stretch
+}
+.chart-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font: 8px var(--mono);
+  color: var(--muted);
+  text-align: center;
+  align-self: center
+}
+.chart-row canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 65px
+}
+.chart-note {
+  font-size: 8px;
+  color: var(--muted);
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px
+}
+.event-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.event-list {
+  flex: 1;
+  overflow: auto;
+  scrollbar-width: thin;
+  min-height: 0
+}
+.event {
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 57px minmax(0, 1fr);
+  gap: 10px
+}
+.event time {
+  font-size: 9px;
+  line-height: 1.8;
+  color: var(--muted)
+}
+.event time span {
+  display: block;
+  font-size: 8px
+}
+.event strong {
+  font-size: 10px;
+  font-weight: 550;
+  display: block
+}
+.event p {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 3px
+}
+.event.pyro strong {
+  color: var(--warn)
+}
+.empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 25px;
+  color: var(--muted)
+}
+.empty-state .icon {
+  width: 25px;
+  height: 25px;
+  stroke-width: 1.1;
+  margin-bottom: 15px
+}
+.empty-state strong {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink)
+}
+.empty-state p {
+  font-size: 10px;
+  line-height: 1.7;
+  margin-top: 7px;
+  max-width: 260px
+}
+.recovery-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 16px
+}
+.recovery-map-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.recovery-map-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px
+}
+.recovery-map {
+  position: absolute;
+  inset: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px)
+}
+.recovery-map text {
+  fill: var(--muted);
+  font: 10px var(--mono)
+}
+.recovery-map .map-grid {
+  stroke: var(--grid);
+  stroke-width: 1
+}
+.recovery-map .map-ring {
+  fill: none;
+  stroke: var(--line);
+  stroke-dasharray: 3 5
+}
+.map-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none
+}
+.map-empty strong {
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--paper);
+  padding: 3px 9px
+}
+.map-empty span {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--paper);
+  padding: 3px 9px
+}
+.recovery-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px
+}
+.recovery-distances {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 18px 0
+}
+.recovery-distance {
+  padding: 0 15px
+}
+.recovery-distance+.recovery-distance {
+  border-left: 1px solid var(--line)
+}
+.recovery-distance span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 6px
+}
+.recovery-distance output {
+  font-size: 25px;
+  white-space: nowrap
+}
+.coordinate-display {
+  padding: 13px 15px;
+  border-top: 1px solid var(--line)
+}
+.coordinate-display span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 7px
+}
+.coordinate-display output {
+  font-size: 12px;
+  line-height: 1.8;
+  display: block
+}
+.coordinate-actions {
+  padding: 0 15px 15px
+}
+.coordinate-actions button {
+  width: 100%;
+  font-size: 10px
+}
+.location-panel {
+  flex: 1
+}
+.location-content {
+  padding: 14px 15px
+}
+.location-content p {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 12px
+}
+.location-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px
+}
+.field label {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 5px
+}
+.field input,
+.field select {
+  width: 100%;
+  min-height: 33px;
+  padding: 7px 8px;
+  font: 11px var(--mono)
+}
+.location-form button {
+  grid-column: 1/-1;
+  font-size: 10px
+}
+.location-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 9px
+}
+.location-saved {
+  font: 9px/1.6 var(--mono);
+  color: var(--muted);
+  margin-top: 10px
+}
+.analysis-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px
+}
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 18px 0
+}
+.summary-item {
+  padding: 0 20px
+}
+.summary-item+.summary-item {
+  border-left: 1px solid var(--line)
+}
+.summary-item span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 9px
+}
+.summary-item output {
+  font-size: 27px;
+  letter-spacing: -.8px
+}
+.analysis-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0
+}
+.analysis-chart-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.analysis-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 170px
+}
+.analysis-chart-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  position: relative
+}
+.analysis-details {
+  padding: 8px 15px
+}
+.analysis-details .data-line {
+  min-height: 38px
+}
+.settings-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  max-width: none
+}
+.settings-stack {
+  display: grid;
+  gap: 16px
+}
+.settings-content {
+  padding: 18px
+}
+.settings-content p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 16px
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px 0;
+  min-height: 47px;
+  border-bottom: 1px solid var(--line)
+}
+.setting-row:last-child {
+  border: 0
+}
+.setting-row label,
+.setting-row>span {
+  font-size: 11px
+}
+.setting-row select {
+  font: 11px var(--mono);
+  padding: 7px;
+  min-width: 125px
+}
+.setting-row output {
+  font-size: 11px
+}
+.theme-choices {
+  display: flex
+}
+.theme-choices button {
+  font-size: 10px;
+  min-height: 29px;
+  padding: 5px 10px;
+  border-radius: 0
+}
+.theme-choices button+button {
+  border-left: 0
+}
+.theme-choices button[aria-pressed="true"] {
+  background: var(--tint);
+  color: var(--accent)
+}
+.locked-parameter {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px
+}
+.locked-parameter:last-child {
+  border: 0
+}
+.locked-parameter span {
+  font-size: 11px;
+  display: block
+}
+.locked-parameter small {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  margin-top: 4px
+}
+.locked-parameter output {
+  font-size: 18px;
+  white-space: nowrap
+}
+.locked-parameter output .unit {
+  display: inline;
+  font-size: 11px;
+  margin-top: 0
+}
+.locked-note {
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--subtle);
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted)
+}
+.protocol-preview {
+  font: 10px/1.7 var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 12px 0 0;
+  background: var(--subtle);
+  padding: 12px;
+  border: 1px solid var(--line)
+}
+details summary {
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--accent)
+}
+.settings-view {
+  padding-bottom: 20px
+}
+.status-message {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+  min-height: 16px
+}
+dialog {
+  width: 445px;
+  max-width: calc(100vw - 30px);
+  padding: 25px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--strong);
+  border-radius: 3px
+}
+dialog::backdrop {
+  background: #0007
+}
+dialog h2 {
+  font-size: 19px;
+  letter-spacing: -.4px;
+  text-transform: none
+}
+dialog p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 13px 0
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 23px
+}
+.dialog-actions button {
+  font-size: 11px
+}
+.dialog-kicker {
+  font: 9px var(--mono);
+  color: var(--accent);
+  letter-spacing: 1px;
+  margin-bottom: 12px
+}
+.dialog-facts {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 18px 0 12px;
+  padding: 6px 0
+}
+.dialog-facts .data-line {
+  font-size: 10px;
+  min-height: 30px
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  padding: 11px 17px;
+  border: 1px solid var(--strong);
+  border-radius: 3px;
+  max-width: calc(100vw - 30px);
+  z-index: 20
+}
+@media(min-width:1550px) {
+  .systems-grid {
+    grid-template-columns: minmax(0, 1fr) 350px
+  }
+  .sensor-value {
+    font-size: 43px
+  }
+  .sensor-value.text-value {
+    font-size: 31px
+  }
+  .sensor {
+    padding: 20px 24px
+  }
+  .check-layout {
+    grid-template-columns: 235px minmax(0, 1fr) 280px
+  }
+  .procedure-content {
+    padding: 30px 32px
+  }
+  .flight-main {
+    grid-template-columns: minmax(0, 1fr) 330px
+  }
+}
+@media(max-height:800px) and (min-width:1051px) {
+  .view-head {
+    height: 83px
+  }
+  .content-height {
+    height: calc(100dvh - 234px);
+    min-height: 440px
+  }
+  .sensor {
+    padding: 10px 16px
+  }
+  .sensor-value {
+    font-size: 29px;
+    margin: 4px 0
+  }
+  .sensor-value.text-value {
+    font-size: 22px
+  }
+  .sensor-sub {
+    gap: 9px;
+    font-size: 9px
+  }
+  .receiver-content {
+    padding: 10px 13px
+  }
+  .data-line {
+    min-height: 30px
+  }
+  .pyro-line {
+    min-height: 32px
+  }
+  .readiness-link {
+    padding: 10px 14px
+  }
+  .procedure-content {
+    padding: 17px 22px
+  }
+  .procedure-content h3 {
+    font-size: 23px
+  }
+  .procedure-description {
+    margin-bottom: 13px
+  }
+  .auto-row {
+    min-height: 33px
+  }
+  .procedure-step {
+    min-height: 66px
+  }
+  .procedure-rail {
+    padding-top: 13px
+  }
+  .rail-title {
+    padding-bottom: 8px
+  }
+  .metric-row {
+    padding: 11px 0
+  }
+  .metric .number {
+    font-size: 27px
+  }
+  .summary-strip {
+    padding: 14px 0
+  }
+  .summary-item output {
+    font-size: 24px
+  }
+  .recovery-distances {
+    padding: 12px 0
+  }
+  .coordinate-display {
+    padding: 9px 15px
+  }
+  .coordinate-actions {
+    padding-bottom: 10px
+  }
+  .coordinate-actions button {
+    min-height: 30px;
+    padding: 6px
+  }
+  .location-content {
+    padding-top: 10px;
+    padding-bottom: 10px
+  }
+}
+@media(max-width:1100px) {
+  .topbar,
+  .tabs-row {
+    padding-left: 19px;
+    padding-right: 19px
+  }
+  .tabs {
+    gap: 20px
+  }
+  .workspace {
+    padding: 0 19px
+  }
+  .app-footer {
+    padding-left: 19px;
+    padding-right: 19px
+  }
+  .systems-grid {
+    grid-template-columns: minmax(0, 1fr) 285px
+  }
+  .sensor {
+    padding: 12px 14px
+  }
+  .sensor-value {
+    font-size: 30px
+  }
+  .sensor-sub {
+    gap: 10px
+  }
+  .check-layout {
+    grid-template-columns: 185px minmax(0, 1fr) 220px;
+    gap: 12px
+  }
+  .procedure-content {
+    padding: 21px 19px
+  }
+  .procedure-content h3 {
+    font-size: 22px
+  }
+  .procedure-step {
+    padding-left: 12px;
+    gap: 9px
+  }
+  .procedure-step+.procedure-step:before {
+    left: 25px
+  }
+  .flight-main {
+    grid-template-columns: minmax(0, 1fr) 250px
+  }
+  .metric {
+    padding: 0 13px
+  }
+  .metric .number {
+    font-size: 27px
+  }
+  .header-status {
+    gap: 12px
+  }
+  .header-last {
+    padding-left: 12px
+  }
+  .nav-right {
+    gap: 15px
+  }
+  .recovery-layout {
+    grid-template-columns: minmax(0, 1fr) 285px
+  }
+}
+@media(max-width:950px) {
+  .check-layout {
+    grid-template-columns: 175px minmax(0, 1fr)
+  }
+  .procedure-side {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: 1fr 1fr
+  }
+  .clearance-top {
+    border: 0;
+    border-right: 1px solid var(--line)
+  }
+  .clearance-note {
+    grid-column: 1/-1
+  }
+  .content-height.check-layout {
+    height: auto;
+    min-height: 0
+  }
+  .procedure-rail,
+  .procedure-body {
+    min-height: 0
+  }
+  .clearance-word {
+    font-size: 22px;
+    margin-top: 8px
+  }
+  .header-last,
+  .clock {
+    display: none
+  }
+  .nav-right {
+    gap: 8px
+  }
+  .view-head h1 {
+    font-size: 24px
+  }
+  .sensor-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px
+  }
+  .sensor-value {
+    margin: 5px 0
+  }
+  .sensor-sub {
+    font-size: 9px
+  }
+  .systems-grid {
+    grid-template-columns: minmax(0, 1fr) 260px
+  }
+  .sensor-value.text-value {
+    font-size: 21px
+  }
+  .recovery-layout {
+    grid-template-columns: minmax(0, 1fr) 270px
+  }
+  .summary-item {
+    padding: 0 14px
+  }
+  .summary-item output {
+    font-size: 23px
+  }
+}
+@media(max-width:760px) {
+  .brand-sub {
+    display: none
+  }
+  .brand-name {
+    font-size: 11px;
+    letter-spacing: 1px
+  }
+  .brand-name small {
+    display: none
+  }
+  .brand {
+    gap: 9px
+  }
+  .topbar {
+    height: 55px;
+    padding: 0 15px;
+    gap: 12px
+  }
+  .header-status .state {
+    font-size: 9px
+  }
+  .header-actions {
+    gap: 6px
+  }
+  .header-actions .primary {
+    font-size: 10px;
+    padding: 8px 10px
+  }
+  .tabs-row {
+    padding: 0 15px;
+    height: 43px
+  }
+  .tabs {
+    gap: 20px
+  }
+  .tab {
+    font-size: 11px;
+    gap: 5px
+  }
+  .tab-index,
+  .tab-check-count {
+    display: none
+  }
+  .settings-tab span {
+    display: none
+  }
+  .settings-tab .icon {
+    width: 17px;
+    height: 17px
+  }
+  .workspace {
+    padding: 0 15px
+  }
+  .view-head {
+    height: 88px;
+    gap: 12px
+  }
+  .view-head h1 {
+    font-size: 23px
+  }
+  .view-description {
+    font-size: 10px
+  }
+  .head-counter {
+    display: none
+  }
+  .head-actions {
+    gap: 8px
+  }
+  .head-actions button {
+    font-size: 10px;
+    padding: 7px 10px
+  }
+  .content-height {
+    height: auto;
+    min-height: 0
+  }
+  .systems-grid {
+    grid-template-columns: 1fr;
+    gap: 12px
+  }
+  .sensor-bank {
+    min-height: 0
+  }
+  .sensor-top {
+    flex-direction: row;
+    align-items: center
+  }
+  .sensor-value {
+    font-size: 33px
+  }
+  .systems-aside {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px
+  }
+  .systems-aside .hardware-panel {
+    grid-column: 2;
+    grid-row: 1/3
+  }
+  .readiness-link {
+    min-height: 80px
+  }
+  .systems-aside .receiver-panel {
+    min-height: 154px
+  }
+  .sensor-value.text-value {
+    font-size: 25px
+  }
+  .sensor-sub {
+    font-size: 10px
+  }
+  .view {
+    min-height: calc(100dvh - 131px);
+    padding-bottom: 15px
+  }
+  .app-footer {
+    padding: 8px 15px;
+    font-size: 8px;
+    align-items: flex-start
+  }
+  .footer-version {
+    font-size: 8px
+  }
+  .check-layout {
+    grid-template-columns: 1fr
+  }
+  .procedure-rail {
+    min-height: 0;
+    padding: 0;
+    display: block;
+    overflow: hidden
+  }
+  .procedure-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr)
+  }
+  .rail-title,
+  .rail-footer,
+  .procedure-step small {
+    display: none
+  }
+  .procedure-step {
+    min-height: 72px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 2px;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    justify-content: center
+  }
+  .procedure-step[aria-current="step"] {
+    border-left: 0;
+    border-bottom-color: var(--accent)
+  }
+  .procedure-step+.procedure-step:before {
+    display: none
+  }
+  .procedure-step strong {
+    font-size: 9px
+  }
+  .step-circle {
+    width: 23px;
+    height: 23px;
+    font-size: 9px
+  }
+  .procedure-body {
+    min-height: 0
+  }
+  .procedure-content {
+    padding: 24px
+  }
+  .procedure-side {
+    grid-column: auto
+  }
+  .flight-main {
+    grid-template-columns: 1fr
+  }
+  .flight-view-layout {
+    gap: 12px
+  }
+  .flight-telemetry {
+    min-height: 490px
+  }
+  .flight-charts {
+    min-height: 300px
+  }
+  .event-list {
+    max-height: 250px;
+    min-height: 180px
+  }
+  .phase-strip {
+    min-height: 65px
+  }
+  .phase-track {
+    padding: 0 10px;
+    gap: 7px
+  }
+  .phase {
+    flex-direction: column;
+    font-size: 8px;
+    gap: 5px
+  }
+  .phase-number {
+    width: 17px;
+    height: 17px;
+    font-size: 8px
+  }
+  .flight-timer {
+    min-width: 115px;
+    padding: 10px
+  }
+  .flight-timer output {
+    font-size: 16px
+  }
+  .recovery-layout {
+    grid-template-columns: 1fr
+  }
+  .recovery-map-panel {
+    height: 410px
+  }
+  .recovery-aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr
+  }
+  .recovery-distance {
+    padding: 0 11px
+  }
+  .recovery-distance output {
+    font-size: 21px
+  }
+  .coordinate-display {
+    padding: 12px
+  }
+  .coordinate-display output {
+    font-size: 10px
+  }
+  .location-content {
+    padding: 12px
+  }
+  .location-form {
+    grid-template-columns: 1fr
+  }
+  .location-form button {
+    grid-column: auto
+  }
+  .location-form .field input {
+    font-size: 10px
+  }
+  .analysis-main {
+    grid-template-columns: 1fr
+  }
+  .analysis-chart-panel {
+    min-height: 320px
+  }
+  .summary-item {
+    padding: 0 13px
+  }
+  .summary-item output {
+    font-size: 21px
+  }
+  .summary-item span {
+    font-size: 8px
+  }
+  .settings-layout {
+    grid-template-columns: 1fr
+  }
+  .analysis-details .data-line {
+    min-height: 32px
+  }
+}
+@media(max-width:480px) {
+  .topbar {
+    padding: 0 12px
+  }
+  .brand-mark {
+    width: 33px;
+    height: 29px;
+    font-size: 11px
+  }
+  .header-status {
+    display: none
+  }
+  .tabs-row {
+    padding: 0 12px;
+    gap: 14px
+  }
+  .tabs {
+    gap: 22px
+  }
+  .workspace {
+    padding: 0 12px
+  }
+  .view-head {
+    height: 96px
+  }
+  .view-head h1 {
+    font-size: 23px
+  }
+  .view-head .eyebrow {
+    font-size: 8px
+  }
+  .head-actions .state {
+    display: none
+  }
+  .sensor-bank {
+    min-height: 0
+  }
+  .sensor {
+    padding: 13px 11px
+  }
+  .sensor-top {
+    flex-direction: column;
+    align-items: flex-start
+  }
+  .sensor-name {
+    font-size: 10px;
+    gap: 5px
+  }
+  .sensor-value {
+    font-size: 28px
+  }
+  .sensor-value.text-value {
+    font-size: clamp(14px, 4.2vw, 21px)
+  }
+  .sensor-sub {
+    gap: 5px 8px;
+    font-size: 9px
+  }
+  .sensor-sub output {
+    font-size: 9px
+  }
+  .systems-aside {
+    grid-template-columns: 1fr
+  }
+  .systems-aside .hardware-panel {
+    grid-column: auto;
+    grid-row: auto
+  }
+  .readiness-link {
+    min-height: 70px
+  }
+  .systems-aside .receiver-panel {
+    min-height: 0
+  }
+  .procedure-content {
+    padding: 21px 17px
+  }
+  .procedure-content h3 {
+    font-size: 23px
+  }
+  .procedure-side {
+    grid-template-columns: 1fr 1fr
+  }
+  .clearance-top {
+    padding: 16px 13px
+  }
+  .clearance-progress {
+    padding: 16px 13px
+  }
+  .clearance-blockers,
+  .clearance-top p,
+  .progress-heading {
+    font-size: 9px
+  }
+  .response-row {
+    gap: 9px
+  }
+  .response-text strong {
+    font-size: 11px
+  }
+  .response-text small,
+  .response-action {
+    font-size: 9px
+  }
+  .response-number {
+    width: 24px;
+    height: 24px;
+    font-size: 9px
+  }
+  .procedure-controls {
+    padding: 12px 13px
+  }
+  .procedure-controls span {
+    font-size: 8px
+  }
+  .auto-row {
+    gap: 5px;
+    grid-template-columns: 15px minmax(0, 1fr) auto;
+    min-height: 41px
+  }
+  .auto-row strong {
+    font-size: 10px
+  }
+  .auto-row .state {
+    font-size: 8px
+  }
+  .metric {
+    padding: 0 10px
+  }
+  .metric .number {
+    font-size: clamp(18px, 5.1vw, 25px);
+    letter-spacing: -.7px
+  }
+  .metric .unit {
+    font-size: 9px;
+    margin-left: 2px
+  }
+  .metric-label {
+    font-size: 9px
+  }
+  .metric-max {
+    font-size: 8px
+  }
+  .phase-track {
+    gap: 3px;
+    padding: 0 7px
+  }
+  .phase {
+    font-size: 7px
+  }
+  .flight-timer {
+    min-width: 99px;
+    padding: 9px
+  }
+  .flight-timer output {
+    font-size: 14px
+  }
+  .flight-timer span {
+    font-size: 7px
+  }
+  .recovery-aside {
+    grid-template-columns: 1fr
+  }
+  .recovery-map-panel {
+    height: 355px
+  }
+  .coordinate-display output {
+    font-size: 12px
+  }
+  .recovery-distance output {
+    font-size: 25px
+  }
+  .location-form {
+    grid-template-columns: 1fr 1fr
+  }
+  .location-form button {
+    grid-column: 1/-1
+  }
+  .summary-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: 19px 0
+  }
+  .summary-item:nth-child(3) {
+    border-left: 0
+  }
+  .summary-item output {
+    font-size: 24px
+  }
+  .app-footer {
+    padding: 7px 12px;
+    flex-direction: column;
+    gap: 5px
+  }
+  .view-description {
+    max-width: 230px
+  }
+  .view {
+    min-height: calc(100dvh - 145px)
+  }
+  .chart-note {
+    font-size: 7px
+  }
+  .completion-summary div {
+    padding: 11px
+  }
+  .setting-row {
+    gap: 10px
+  }
+  .settings-content {
+    padding: 15px
+  }
+  .locked-parameter output {
+    font-size: 16px
+  }
+}
+@media(prefers-reduced-motion:no-preference) {
+  button {
+    transition: background .12s, border-color .12s
+  }
+}
+/* Contents determine the height of these workspaces, at every breakpoint. */
+.systems-grid.content-height,
+.check-layout.content-height {
+  height: auto;
+  min-height: 0;
+  align-items: start
+}
+.phase {
+  position: relative;
+  isolation: isolate
+}
+.phase-number {
+  background: var(--paper)
+}
+.phase-label {
+  background: var(--paper);
+  padding-right: 4px
+}
+.phase:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  right: -20px;
+  height: 1px;
+  background: var(--line);
+  z-index: -1
+}
+.phase.done::after {
+  background: var(--muted)
+}
+.phase.done .phase-number {
+  background: var(--muted);
+  border-color: var(--muted);
+  color: var(--paper);
+  font-size: 10px
+}
+.chart-gap-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px
+}
+.chart-gap-legend::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  border-top: 1px dashed var(--muted)
+}
+.chart-note,
+.analysis-chart-panel>.panel-foot {
+  flex-wrap: wrap
+}
+.field input[aria-invalid="true"] {
+  border-color: var(--warn)
+}
+#sensor-fix-detail {
+  flex-basis: 100%
+}
+.badge.warn {
+  color: var(--warn);
+  border-color: var(--warn)
+}
+.receiver-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr))
+}
+.receiver-stats>div {
+  padding-left: 12px;
+  padding-right: 12px
+}
+.diagnostics-panel {
+  grid-column: 1/-1
+}
+.diagnostics-actions {
+  display: flex;
+  gap: 8px
+}
+.diagnostics-actions button {
+  font-size: 10px;
+  min-height: 28px;
+  padding: 5px 9px
+}
+.diagnostics-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line)
+}
+.diagnostics-stats>div {
+  padding: 11px 15px;
+  min-width: 0
+}
+.diagnostics-stats>div+div {
+  border-left: 1px solid var(--line)
+}
+.diagnostics-stats span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 4px
+}
+.diagnostics-stats output {
+  display: block;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap
+}
+.raw-log {
+  max-height: 330px;
+  overflow: auto;
+  scrollbar-width: thin;
+  font: 10px/1.55 var(--mono)
+}
+.raw-row {
+  display: grid;
+  grid-template-columns: 58px 72px minmax(0, 1fr);
+  gap: 10px;
+  padding: 6px 15px;
+  border-bottom: 1px solid var(--line)
+}
+.raw-row:last-child {
+  border-bottom: 0
+}
+.raw-row time {
+  color: var(--muted)
+}
+.raw-status {
+  color: var(--ok)
+}
+.raw-row.rejected .raw-status,
+.raw-reason {
+  color: var(--warn)
+}
+.raw-text {
+  min-width: 0
+}
+.raw-line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap
+}
+.raw-reason {
+  display: block;
+  font-family: var(--sans)
+}
+.raw-empty {
+  padding: 26px 15px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px
+}
+.dialog-actions {
+  flex-wrap: wrap
+}
+/* Field mode: more contrast and heavier digits for daylight use. */
+[data-theme="light"][data-field="on"] {
+  --bg: #e6eaeb;
+  --ink: #081217;
+  --muted: #36434a;
+  --line: #a3b0b6;
+  --strong: #73848c;
+  --accent: #17465d;
+  --ok: #175234;
+  --warn: #873a12;
+  --grid: #cfd8dc
+}
+[data-theme="dark"][data-field="on"] {
+  --bg: #070b0e;
+  --paper: #0f161b;
+  --subtle: #17222a;
+  --ink: #fff;
+  --muted: #cfd9df;
+  --line: #4d626e;
+  --strong: #7890a0;
+  --accent: #b5ddef;
+  --ok: #a9e2bd;
+  --warn: #f6c8a1;
+  --grid: #26343d
+}
+[data-field="on"] :is(.sensor-value, .metric .number, .flight-timer output, .recovery-distance output, .summary-item output, .clearance-word, .locked-parameter output) {
+  font-weight: 600
+}
+[data-field="on"] :is(.sensor-sub, .metric-label, .metric-max, .panel-foot, .chart-note, .event p, .receiver-stats span, .data-line, .pyro-line-label, .pyro-line output, .state, .view-description, .recovery-distance span, .coordinate-display span, .summary-item span, .raw-row, .fix-table) {
+  font-size: 11px
+}
+[data-field="on"] .chart-label {
+  font-size: 10px
+}
+.setting-hint {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px
+}
+.setting-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px
+}
+.small-button {
+  font-size: 10px;
+  min-height: 29px;
+  padding: 5px 10px
+}
+/* Link-loss banner while a flight phase is active. */
+.link-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+  padding: 9px 25px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-bottom: 1px solid var(--warn);
+  font-size: 12px
+}
+.link-banner strong {
+  font-weight: 600
+}
+.link-banner output {
+  font: 11px var(--mono);
+  color: var(--ink)
+}
+.link-banner .text-button {
+  margin-left: auto;
+  color: var(--warn);
+  font-size: 11px
+}
+/* Start check protocol */
+.protocol-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line)
+}
+.protocol-actions span {
+  font: 10px var(--mono);
+  color: var(--muted)
+}
+.protocol-actions div {
+  display: flex;
+  gap: 8px
+}
+.print-protocol {
+  display: none
+}
+@media print {
+  body {
+    background: #fff
+  }
+  body>*:not(.print-protocol) {
+    display: none !important
+  }
+  .print-protocol {
+    display: block !important;
+    margin: 0;
+    color: #000;
+    font: 10.5px/1.6 "SFMono-Regular", Consolas, monospace;
+    white-space: pre-wrap
+  }
+}
+/* Recovery: GPS history and map link */
+.coordinate-actions {
+  display: flex;
+  gap: 8px
+}
+.coordinate-actions #copy-position {
+  flex: 1
+}
+.coordinate-actions #open-map {
+  width: auto;
+  flex: none
+}
+.fix-panel {
+  margin-top: 16px
+}
+.fix-table-wrap {
+  overflow-x: auto;
+  scrollbar-width: thin
+}
+.fix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 11px var(--mono)
+}
+.fix-table th {
+  font: 600 9px var(--sans);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 9px 15px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap
+}
+.fix-table td {
+  padding: 8px 15px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap
+}
+.fix-table tr:last-child td {
+  border-bottom: 0
+}
+.fix-table td.empty {
+  color: var(--muted);
+  font-family: var(--sans);
+  text-align: center;
+  padding: 20px 15px
+}
+.fix-table tbody tr:first-child td {
+  color: var(--accent)
+}
+.fix-table tbody tr:first-child td.empty {
+  color: var(--muted)
+}
+@media(max-width:760px) {
+  .diagnostics-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+  }
+  .diagnostics-stats>div:nth-child(4) {
+    border-left: 0
+  }
+  .diagnostics-stats>div:nth-child(n+4) {
+    border-top: 1px solid var(--line)
+  }
+  .diagnostics-stats>div {
+    padding: 10px 12px
+  }
+  .diagnostics-stats output {
+    white-space: normal;
+    overflow-wrap: anywhere
+  }
+  .raw-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    padding: 7px 12px
+  }
+  .raw-row .raw-text {
+    grid-column: 1/-1
+  }
+  .diagnostics-panel .panel-head {
+    height: auto;
+    min-height: 43px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: wrap
+  }
+}
+@media(max-width:480px) {
+  .receiver-stats>div {
+    padding-left: 10px;
+    padding-right: 10px
+  }
+  .receiver-stats span {
+    font-size: 8px
+  }
+  .tabs {
+    gap: 13px
+  }
+  .tabs-row {
+    gap: 10px
+  }
+  .fix-table .opt {
+    display: none
+  }
+  .fix-table th,
+  .fix-table td {
+    padding-left: 10px;
+    padding-right: 10px
+  }
+}
+@media(max-width:760px) {
+  .link-banner {
+    padding: 8px 15px;
+    font-size: 11px
+  }
+  .fix-panel {
+    margin-top: 12px
+  }
+}
+@media(max-width:760px) {
+  .phase-label {
+    padding-right: 0
+  }
+  .phase:not(:last-child)::after {
+    top: 8px;
+    left: 50%;
+    right: calc(-50% - 7px)
+  }
+}
+@media(max-width:480px) {
+  .phase:not(:last-child)::after {
+    right: calc(-50% - 3px)
+  }
+}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-plug" viewBox="0 0 20 20"><path d="M7 2v4m6-4v4M5 6h10v3a5 5 0 0 1-10 0V6Zm5 8v4"/></symbol>
+<symbol id="i-theme" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5"/><path d="M10 3.5v13a6.5 6.5 0 0 0 0-13" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-settings" viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/><path d="M7 3v4m6 1v4m-5 1v4" stroke-width="3"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 20 20"><path d="M3 10h13m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-check" viewBox="0 0 20 20"><path d="m4 10 4 4 8-9"/></symbol>
+<symbol id="i-lock" viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="1"/><path d="M6 9V6a4 4 0 0 1 8 0v3m-4 4v2"/></symbol>
+<symbol id="i-pyro" viewBox="0 0 20 20"><path d="m11 2-7 9h5l-1 7 8-10h-5l1-6Z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 20 20"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M12 4V3H3v9h1"/></symbol>
+<symbol id="i-export" viewBox="0 0 20 20"><path d="M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4"/></symbol>
+<symbol id="i-signal" viewBox="0 0 20 20"><path d="M4 16v-3m4 3V9m4 7V5m4 11V2"/></symbol>
+</defs></svg>
+<header class="app-header"><div class="topbar"><div class="brand"><div class="brand-mark">TRS</div><div><div class="brand-name">BODENSTATION <small>BETA 0.2</small></div><div class="brand-sub">EMPFANG / FLUGCOMPUTER / BERGUNG</div></div></div><div class="header-status"><span class="state" id="global-state"><i class="dot"></i><span>Empfänger getrennt</span></span><span class="header-last">Letztes Paket <output id="global-age">—</output></span></div><div class="header-actions"><button class="icon-button" id="theme-button" aria-label="Dunklen Modus aktivieren" title="Hell-/Dunkelmodus"><svg class="icon"><use href="#i-theme"/></svg></button><button class="primary" id="connect-button"><svg class="icon"><use href="#i-plug"/></svg><span id="connect-label">Verbinden</span></button></div></div>
+<div class="tabs-row" role="tablist" aria-label="Arbeitsbereiche"><nav class="tabs"><button class="tab" id="tab-systeme" role="tab" aria-selected="true" aria-controls="view-systeme" data-tab="systeme"><span class="tab-index">01</span>Systeme</button><button class="tab" id="tab-startcheck" role="tab" aria-selected="false" aria-controls="view-startcheck" data-tab="startcheck" tabindex="-1"><span class="tab-index">02</span>Startcheck<span class="tab-check-count" id="tab-check-count">0/7</span></button><button class="tab" id="tab-flug" role="tab" aria-selected="false" aria-controls="view-flug" data-tab="flug" tabindex="-1"><span class="tab-index">03</span>Flug</button><button class="tab" id="tab-bergung" role="tab" aria-selected="false" aria-controls="view-bergung" data-tab="bergung" tabindex="-1"><span class="tab-index">04</span>Bergung</button><button class="tab" id="tab-auswertung" role="tab" aria-selected="false" aria-controls="view-auswertung" data-tab="auswertung" tabindex="-1"><span class="tab-index">05</span>Auswertung</button></nav><div class="nav-right"><time class="clock" id="clock"></time><button class="tab settings-tab" id="tab-einstellungen" role="tab" aria-controls="view-einstellungen" aria-selected="false" data-tab="einstellungen" tabindex="-1" aria-label="Einstellungen"><svg class="icon"><use href="#i-settings"/></svg><span>Einstellungen</span></button></div></div></header>
+<div class="link-banner" id="link-banner" role="alert" hidden><svg class="icon" aria-hidden="true"><use href="#i-signal"/></svg><strong>Verbindung zum Flugcomputer verloren</strong><output id="link-banner-detail"></output><button class="text-button" id="link-banner-hide">Ausblenden</button></div>
+<main class="workspace">
+<section class="view" id="view-systeme" role="tabpanel" aria-labelledby="tab-systeme"><div class="view-head"><div><div class="eyebrow">Hardware &amp; Verbindung</div><h1>Systemübersicht</h1><p class="view-description">Die gesamte Messkette. Ein Bildschirm.</p></div><div class="head-actions"><span class="head-counter" id="source-count">0 / 6 Datenquellen</span><button class="quiet" data-go="startcheck">Zum Startcheck<svg class="icon"><use href="#i-arrow"/></svg></button></div></div>
+<div class="systems-grid content-height"><section class="panel sensor-bank" aria-labelledby="sensor-heading"><div class="panel-head"><h2 id="sensor-heading">Flugcomputer / RP2354A</h2><span class="badge" id="device-badge">GERÄT AUSSTEHEND</span></div><div class="sensor-grid">
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">01</span>Barometer</h3><span class="state" id="baro-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value"><output id="sensor-height">—</output><span class="unit">m</span></div><div class="sensor-sub"><span>Höhe über Start</span><span><label>Druck</label><output id="sensor-pressure">— hPa</output></span></div></article>
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">02</span>Beschleunigung / IMU</h3><span class="state" id="imu-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value"><output id="sensor-g">—</output><span class="unit">g</span></div><div class="sensor-sub"><span>LSM6DSO32 · ±32 g</span><output id="sensor-axes">X — / Y — / Z — g</output></div></article>
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">03</span>GPS / u-blox M10</h3><span class="state" id="gps-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value" id="sensor-fix-value"><output id="sensor-fix">—</output></div><div class="sensor-sub"><span id="sensor-fix-detail">Fix ausstehend</span><span><label>Satelliten</label><output id="sensor-satellites">—</output></span><span><label>HDOP</label><output id="sensor-hdop">—</output></span></div></article>
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">04</span>LoRa / Funkstrecke</h3><span class="state" id="lora-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value"><output id="sensor-rssi">—</output><span class="unit">dBm</span></div><div class="sensor-sub"><span><label>SNR</label><output id="sensor-snr">— dB</output></span><span><label>Paketrate</label><output id="sensor-rate">— Hz</output></span><span><label>Verlust</label><output id="sensor-loss">— %</output></span></div></article>
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">05</span>Stromversorgung</h3><span class="state" id="power-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value"><output id="sensor-battery">—</output><span class="unit">V</span></div><div class="sensor-sub"><span>Akkuspannung</span><span><label>Hauptschalter</label><output id="sensor-main">UNBEKANNT</output></span></div></article>
+<article class="sensor"><div class="sensor-top"><h3 class="sensor-name"><span class="sensor-index">06</span>Datenspeicher</h3><span class="state" id="flash-state"><i class="dot"></i>Keine Daten</span></div><div class="sensor-value"><output id="sensor-flash">—</output><span class="unit">% frei</span></div><div class="sensor-sub"><span>Log-Flash</span><span><label>Logging</label><output id="sensor-logging">— Hz</output></span></div></article>
+</div><div class="panel-foot"><span id="sensor-freshness">Wartet auf gültige Telemetrie</span><span class="mono">— = unbekannt</span></div></section>
+<aside class="systems-aside"><section class="panel receiver-panel"><div class="panel-head"><h2>USB-Empfänger</h2><span class="state" id="usb-state"><i class="dot"></i>Getrennt</span></div><div class="receiver-content"><div class="receiver-symbol"><svg class="icon"><use href="#i-plug"/></svg></div><div><strong id="receiver-title">Kein Empfänger verbunden</strong><p id="receiver-description">USB-Verbindung oben herstellen.</p></div></div><div class="receiver-stats"><div><span>GÜLTIGE PAKETE</span><output id="received-count">0</output></div><div><span>VERWORFENE PAKETE</span><output id="rejected-count">0</output></div><div><span>FEHLEND (SEQ)</span><output id="missed-count">0</output></div></div></section>
+<section class="panel hardware-panel"><div class="panel-head"><h2>Hardware-Sicherheit</h2><span class="badge" id="hardware-badge">NUR ANZEIGE</span></div><div class="hardware-content"><div class="data-line"><span>Hauptschalter</span><output id="hardware-main">UNBEKANNT</output></div><div class="data-line"><span>Scharfschalter</span><output id="hardware-arm">UNBEKANNT</output></div><div class="hardware-divider"></div><div class="pyro-line"><span class="pyro-line-label"><svg class="icon"><use href="#i-pyro"/></svg>Pyro 1 · Durchgang</span><output id="hardware-pyro1">UNBEKANNT</output></div><div class="pyro-line"><span class="pyro-line-label"><svg class="icon"><use href="#i-pyro"/></svg>Pyro 2 · Durchgang</span><output id="hardware-pyro2">UNBEKANNT</output></div></div><div class="profile-line" id="profile-status">FIRMWARE-ABGLEICH AUSSTEHEND</div></section>
+<section class="panel readiness-link"><div><strong id="overview-readiness">Startfreigabe offen</strong><p id="overview-readiness-sub">Startcheck noch nicht abgeschlossen.</p></div><button class="quiet" data-go="startcheck" aria-label="Startcheck öffnen"><svg class="icon"><use href="#i-arrow"/></svg></button></section></aside></div></section>
+<section class="view" id="view-startcheck" role="tabpanel" aria-labelledby="tab-startcheck" hidden><div class="view-head"><div><div class="eyebrow">Vorbereitung / Prüfablauf 01</div><h1>Startcheck</h1><p class="view-description">Systembefunde prüfen. Vorbereitung dokumentieren.</p></div><div class="head-actions"><span class="state" id="check-head-state"><i class="dot"></i>Prüfung offen</span><button class="quiet" id="reset-check">Prüfung neu beginnen</button></div></div><div class="check-layout content-height"><nav class="panel procedure-rail" aria-label="Prüfschritte"><div class="rail-title eyebrow">Prüfsequenz</div><div class="procedure-steps" id="procedure-steps"></div><div class="rail-footer">Bestätigungen gelten nur für diese Sitzung.</div></nav><section class="panel procedure-body" aria-live="polite"><div class="procedure-content" id="procedure-content"></div><div class="procedure-controls"><button class="quiet" id="check-back">Zurück</button><span id="step-pagination">SCHRITT 01 / 05</span><button class="primary" id="check-next">Weiter<svg class="icon"><use href="#i-arrow"/></svg></button></div></section><aside class="panel procedure-side"><div class="clearance-top"><span class="eyebrow">Startbereitschaft</span><div class="clearance-word" id="clearance-word">Gesperrt</div><p id="clearance-description">Ohne gültige Telemetrie ist keine Freigabe möglich.</p></div><div class="clearance-progress"><div class="progress-heading"><span>Automatische Prüfungen</span><output id="auto-progress">0 / 7</output></div><div class="progress-segments" id="auto-segments"></div><div class="progress-heading"><span>Manuelle Bestätigungen</span><output id="manual-progress">0 / 7</output></div><div class="progress-segments" id="manual-segments"></div><ul class="clearance-blockers" id="clearance-blockers"></ul></div><div class="clearance-note"><svg class="icon"><use href="#i-lock"/></svg>Die Freigabe dokumentiert die Prüfung lokal. Scharfschalten und Auslösen erfolgen ausschließlich über die Hardware.</div></aside></div></section>
+<section class="view" id="view-flug" role="tabpanel" aria-labelledby="tab-flug" hidden><div class="view-head"><div><div class="eyebrow">Live-Empfang / Flugverlauf</div><h1>Flugmonitor</h1><p class="view-description" id="flight-description">Wartet auf einen Flugcomputer.</p></div><div class="head-actions"><span class="state" id="flight-record-state"><i class="dot"></i>Keine Aufzeichnung</span><button class="quiet" data-export disabled><svg class="icon"><use href="#i-export"/></svg>CSV exportieren</button></div></div><div class="flight-view-layout content-height"><section class="phase-strip" aria-label="Empfangene Flugphase"><ol class="phase-track" id="phase-track"></ol><div class="flight-timer"><span>FLUGZEIT / min:s</span><output id="flight-time">T+—:—</output></div></section><div class="flight-main"><section class="panel flight-telemetry"><div class="metric-row"><div class="metric"><div class="metric-label">Höhe über Start</div><div class="number"><output id="flight-height">—</output><span class="unit">m</span></div><div class="metric-max" id="flight-max-height">MAX — m</div></div><div class="metric"><div class="metric-label">Geschwindigkeit</div><div class="number"><output id="flight-velocity">—</output><span class="unit">m/s</span></div><div class="metric-max" id="flight-max-velocity">MAX — m/s</div></div><div class="metric"><div class="metric-label">Vertikale Beschleunigung</div><div class="number"><output id="flight-g">—</output><span class="unit">g</span></div><div class="metric-max" id="flight-max-g">MAX — g</div></div></div><div class="flight-charts"><div class="chart-row"><span class="chart-label">HÖHE / m</span><canvas id="chart-height" role="img" aria-label="Empfangener Höhenverlauf in Metern über der Flugzeit"></canvas></div><div class="chart-row"><span class="chart-label">GESCHW. / m/s</span><canvas id="chart-velocity" role="img" aria-label="Empfangener Geschwindigkeitsverlauf"></canvas></div><div class="chart-row"><span class="chart-label">BESCHL. / g</span><canvas id="chart-g" role="img" aria-label="Empfangene vertikale Beschleunigung ohne Erdbeschleunigung"></canvas></div></div><div class="chart-note"><span id="flight-sample-count">0 empfangene Flugmesswerte</span><span class="chart-gap-legend" id="flight-gap-legend" hidden>Gestrichelt: Datenlücke</span><span>Beschleunigung ohne 1 g · Zeit in s</span></div></section><section class="panel event-panel"><div class="panel-head"><h2>Ereignisse</h2><span class="muted mono" id="event-count">00</span></div><div class="event-list" id="event-list" role="log" aria-live="polite" aria-relevant="additions"><div class="empty-state" id="event-empty"><svg class="icon"><use href="#i-signal"/></svg><strong>Noch keine Ereignisse</strong><p>Empfangene Phasenwechsel und Hardware-Statusmeldungen erscheinen hier.</p></div></div><div class="panel-foot"><span>Zeitstempel des Empfangs</span></div></section></div></div></section>
+<section class="view" id="view-bergung" role="tabpanel" aria-labelledby="tab-bergung" hidden><div class="view-head"><div><div class="eyebrow">Position / Letzter gültiger Fix</div><h1>Bergung</h1><p class="view-description">Position und Peilung zur Bodenstation.</p></div><span class="state" id="recovery-state"><i class="dot"></i>GPS-Position ausstehend</span></div><div class="recovery-layout content-height"><section class="panel recovery-map-panel"><div class="panel-head"><h2>Relative Position</h2><span class="muted">Schematisch · Norden oben</span></div><div class="recovery-map-wrap"><svg class="recovery-map" viewBox="0 0 600 390" role="img" aria-label="Schematische Peilung relativ zum Standort der Bodenstation"><defs><pattern id="position-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path class="map-grid" d="M30 0H0V30" fill="none"/></pattern></defs><rect x="25" y="10" width="550" height="365" fill="url(#position-grid)"/><circle class="map-ring" cx="300" cy="210" r="85"/><circle class="map-ring" cx="300" cy="210" r="155"/><path class="map-grid" d="M300 30v335M45 210h510"/><text x="295" y="23">N</text><text x="295" y="384">S</text><text x="22" y="214">W</text><text x="570" y="214">O</text><g id="map-position" visibility="hidden"><path id="map-bearing-line" stroke="var(--accent)" stroke-width="1.3" fill="none"/><rect x="296" y="206" width="8" height="8" fill="var(--paper)" stroke="var(--ink)"/><text x="310" y="228">Bodenstation</text><circle id="map-rocket" r="5" fill="var(--accent)" stroke="var(--paper)" stroke-width="2"/><text id="map-rocket-label">Rakete</text><text id="map-scale" x="319" y="60"></text></g></svg><div class="map-empty" id="map-empty"><strong>Position ausstehend</strong><span>GPS-Fix und Bezugspunkt erforderlich.</span></div></div><div class="panel-foot"><span id="recovery-age">Kein gültiger GPS-Fix empfangen</span><span class="mono">WGS84</span></div></section><aside class="recovery-aside"><section class="panel"><div class="panel-head"><h2>Letzte Raketenposition</h2><span class="badge">GPS</span></div><div class="recovery-distances"><div class="recovery-distance"><span>ENTFERNUNG</span><output id="recovery-distance">—<small class="unit">m</small></output></div><div class="recovery-distance"><span>RICHTUNG</span><output id="recovery-bearing">—<small class="unit">°</small></output></div></div><div class="coordinate-display"><span>BREITE / LÄNGE</span><output id="recovery-lat">— ° N</output><output id="recovery-lon">— ° O</output></div><div class="coordinate-actions"><button class="quiet" id="copy-position" disabled><svg class="icon"><use href="#i-copy"/></svg>Koordinaten kopieren</button><button class="quiet" id="open-map" disabled title="Öffnet openstreetmap.org in einem neuen Tab. Die Koordinaten werden dabei an diesen externen Dienst übertragen.">Karte ↗</button></div></section><section class="panel location-panel"><div class="panel-head"><h2>Standort Bodenstation</h2></div><div class="location-content"><p>Bezugspunkt für Entfernung und Richtung. Wird nur lokal gespeichert.</p><form class="location-form" id="location-form" novalidate><div class="field"><label for="base-lat">Breite / Grad</label><input id="base-lat" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="location-message" placeholder="z. B. 52,39" required></div><div class="field"><label for="base-lon">Länge / Grad</label><input id="base-lon" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="location-message" placeholder="z. B. 13,07" required></div><button class="quiet" type="submit">Standort speichern</button></form><div class="location-secondary"><button class="text-button" id="locate-button">Laptop-Position verwenden</button><button class="text-button" id="clear-location" hidden>Entfernen</button></div><p class="location-saved" id="location-saved">Noch kein Bezugspunkt festgelegt.</p><div class="status-message" id="location-message" role="status"></div></div></section></aside></div><section class="panel fix-panel" aria-labelledby="fix-heading"><div class="panel-head"><h2 id="fix-heading">GPS-Verlauf</h2><span class="muted mono" id="fix-count">0 Fixes</span></div><div class="fix-table-wrap"><table class="fix-table"><thead><tr><th class="opt">Empfang</th><th>Alter</th><th>Breite</th><th>Länge</th><th class="opt">Höhe</th><th class="opt">Sat. / HDOP</th><th>Entfernung</th></tr></thead><tbody id="fix-body"><tr><td class="empty" colspan="7">Noch kein 3D-Fix empfangen.</td></tr></tbody></table></div><div class="panel-foot"><span>Neueste zuerst · letzte 10 Fixes · neuer Eintrag bei mehr als 2 m Bewegung oder nach 5 s</span><span class="mono">WGS84</span></div></section></section>
+<section class="view" id="view-auswertung" role="tabpanel" aria-labelledby="tab-auswertung" hidden><div class="view-head"><div><div class="eyebrow">Aufzeichnung / Flugbilanz</div><h1>Auswertung</h1><p class="view-description" id="analysis-description">Noch kein Flug aufgezeichnet.</p></div><div class="head-actions"><span class="head-counter" id="analysis-record-count">0 Messwerte</span><button class="quiet" id="new-recording" disabled>Neue Aufzeichnung</button><button class="quiet" data-export disabled><svg class="icon"><use href="#i-export"/></svg>CSV exportieren</button></div></div><div class="analysis-layout content-height"><section class="panel summary-strip"><div class="summary-item"><span>GIPFELHÖHE</span><output id="summary-height">—<small class="unit">m</small></output></div><div class="summary-item"><span>MAX. GESCHWINDIGKEIT</span><output id="summary-velocity">—<small class="unit">m/s</small></output></div><div class="summary-item"><span>MAX. BESCHLEUNIGUNG</span><output id="summary-g">—<small class="unit">g</small></output></div><div class="summary-item"><span>FLUGDAUER</span><output id="summary-duration">—<small class="unit">s</small></output></div></section><div class="analysis-main"><section class="panel analysis-chart-panel"><div class="panel-head"><h2>Höhenprofil</h2><span class="muted">Empfangene Messwerte / m über Start</span></div><div class="analysis-chart-wrap"><canvas class="analysis-canvas" id="chart-analysis" role="img" aria-label="Höhenprofil des empfangenen Flugs"></canvas></div><div class="panel-foot"><span id="analysis-chart-status">Wartet auf Flugaufzeichnung</span><span class="chart-gap-legend" id="analysis-gap-legend" hidden>Gestrichelt: Datenlücke</span><span class="mono">Zeit in s</span></div></section><section class="panel"><div class="panel-head"><h2>Flugdatensatz</h2></div><div class="analysis-details"><div class="data-line"><span>Flugkennung</span><output id="analysis-flight-id">—</output></div><div class="data-line"><span>Flugcomputer</span><output id="analysis-device-id">—</output></div><div class="data-line"><span>Erster Empfang</span><output id="analysis-first">—</output></div><div class="data-line"><span>Letzter Empfang</span><output id="analysis-last">—</output></div><div class="data-line"><span>Aufzeichnung</span><output id="analysis-status">AUSSTEHEND</output></div><div class="data-line"><span>Messwerte</span><output id="analysis-samples">0</output></div><div class="data-line"><span>Pyro 1 / Pyro 2</span><output id="analysis-pyros">— / —</output></div><div class="data-line"><span>Sicherung / CSV</span><output id="analysis-backup">— / —</output></div></div><div class="panel-foot">CSV enthält ausschließlich empfangene Flugdaten.</div></section></div></div></section>
+<section class="view settings-view" id="view-einstellungen" role="tabpanel" aria-labelledby="tab-einstellungen" hidden><div class="view-head"><div><div class="eyebrow">Bodenstation / Lokale Einstellungen</div><h1>Einstellungen</h1><p class="view-description">Empfang und Darstellung. Feste Firmwarevorgaben.</p></div><span class="badge">BETA 0.2</span></div><div class="settings-layout"><div class="settings-stack"><section class="panel"><div class="panel-head"><h2>Empfang &amp; Darstellung</h2></div><div class="settings-content"><div class="setting-row"><label for="baud-rate">USB-Baudrate</label><select id="baud-rate"><option value="115200">115.200 Baud</option><option value="57600">57.600 Baud</option><option value="230400">230.400 Baud</option></select></div><div class="setting-row"><span>Serielles Format</span><output>8N1 / UTF-8</output></div><div class="setting-row"><span>Darstellung</span><div class="theme-choices" role="group" aria-label="Farbschema"><button data-theme-choice="light" aria-pressed="true">Hell</button><button data-theme-choice="dark" aria-pressed="false">Dunkel</button></div></div><div class="setting-row"><span>Feldmodus<small class="setting-hint">Mehr Kontrast und kräftigere Ziffern für Sonnenlicht</small></span><div class="theme-choices" role="group" aria-label="Feldmodus"><button data-field-choice="off" aria-pressed="true">Aus</button><button data-field-choice="on" aria-pressed="false">Ein</button></div></div><div class="setting-row"><span>Vollbild<small class="setting-hint">Blendet Browserleisten aus · Esc beendet</small></span><button class="quiet small-button" id="fullscreen-button">Vollbild öffnen</button></div><div class="setting-row"><span>Akustische Hinweise<small class="setting-hint">Phasenwechsel, Pyro, Verbindungsverlust</small></span><div class="setting-actions"><button class="quiet small-button" id="sound-test">Testton</button><div class="theme-choices" role="group" aria-label="Akustische Hinweise"><button data-sound-choice="off" aria-pressed="true">Aus</button><button data-sound-choice="on" aria-pressed="false">Ein</button></div></div></div><div class="setting-row"><span>Funkkanal</span><output id="setting-frequency">Aus Telemetrie</output></div><div class="setting-row"><span>Logging-Rate</span><output id="setting-logging">Aus Telemetrie</output></div></div><div class="locked-note">Die Bodenstation empfängt ausschließlich. Es werden keine Konfigurations- oder Zündbefehle gesendet.</div></section><section class="panel"><div class="panel-head"><h2>Empfangsformat / Entwurf</h2><span class="badge">TRS / 1</span></div><div class="settings-content"><p>Für die spätere Empfänger-Firmware: ein JSON-Telemetriepaket pro Zeile. Paketaufbau und Prüflogik sind zentral im Quellcode dokumentiert.</p><details><summary>Paketstruktur anzeigen</summary><pre class="protocol-preview" id="protocol-preview"></pre></details></div></section></div><section class="panel"><div class="panel-head"><h2>Festes Firmware-Sollprofil</h2><svg class="icon muted"><use href="#i-lock"/></svg></div><div class="settings-content"><p>Auslösehöhe und Apogäum-Verzögerung sind Codekonstanten. Sie lassen sich in dieser Oberfläche nicht verändern.</p><div class="locked-parameter"><div><span>Pyro 1</span><small>Verzögerung nach Apogäum</small></div><output id="fixed-apogee-delay">500 <small class="unit">ms</small></output></div><div class="locked-parameter"><div><span>Pyro 2</span><small>Auslösehöhe im Abstieg, über Start</small></div><output id="fixed-pyro2-height">150 <small class="unit">m</small></output></div><div class="locked-parameter"><div><span>Sollprofil</span><small>Abgleich mit empfangener Firmware</small></div><output style="font-size:12px" id="fixed-profile-id">TRS-FC-01</output></div><div class="locked-parameter"><div><span>Firmware-Version</span><small>Vom Flugcomputer gemeldet, nur Anzeige</small></div><output style="font-size:12px" id="fw-version">—</output></div></div><div class="locked-note" id="firmware-match-note">Firmware-Abgleich ausstehend. Die Werte hier sind das Sollprofil der Bodenstation; die tatsächliche Auslöselogik muss fest in der Flugcomputer-Firmware implementiert sein.</div></section>
+<section class="panel diagnostics-panel" aria-labelledby="diagnostics-heading"><div class="panel-head"><h2 id="diagnostics-heading">Empfangsdiagnose</h2><div class="diagnostics-actions"><button class="quiet" id="export-raw" disabled><svg class="icon"><use href="#i-export"/></svg>Rohdaten exportieren</button></div></div><div class="diagnostics-stats"><div><span>GÜLTIG</span><output id="diag-valid">0</output></div><div><span>VERWORFEN</span><output id="diag-rejected">0</output></div><div><span>FEHLEND (SEQ)</span><output id="diag-missed">0</output></div><div><span>VERLUST / 10 s</span><output id="diag-loss">—</output></div><div><span>RUHEZUSTAND</span><output id="diag-wake">INAKTIV</output></div><div><span>LOKALE SICHERUNG</span><output id="diag-backup">WIRD GEPRÜFT</output></div></div><div class="raw-log" id="raw-log" role="log" aria-label="Zuletzt empfangene Rohzeilen"><div class="raw-empty">Noch keine Zeilen empfangen.</div></div><div class="panel-foot"><span>Neueste zuerst · letzte 50 Zeilen sichtbar · Export bis 5.000 Zeilen dieser Sitzung</span><span class="mono">NUR EMPFANG</span></div></section></div></section>
+</main><footer class="app-footer"><div class="footer-security"><svg class="icon"><use href="#i-lock"/></svg>Pyro nur Anzeige · keine Fernzündung · Auslöseparameter nicht bedienbar</div><span class="footer-version">TRS / BETA 0.2 / LOKALER EMPFANG</span></footer>
+<dialog id="connection-dialog" aria-labelledby="connection-title"><div class="dialog-kicker">USB / WEB SERIAL</div><h2 id="connection-title">Empfänger verbinden</h2><p id="serial-support">Browser-Unterstützung wird geprüft.</p><div class="dialog-facts"><div class="data-line"><span>Verbindungsprofil</span><output id="dialog-baud">115.200 Baud / 8N1</output></div><div class="data-line"><span>Datenfluss</span><output>NUR EMPFANG</output></div><div class="data-line"><span>Empfangsformat</span><output>TRS / 1 · JSON pro Zeile</output></div></div><div class="status-message" id="serial-message" role="status"></div><div class="dialog-actions"><button class="quiet" id="close-connection">Schließen</button><button class="primary" id="select-port">USB-Empfänger auswählen</button></div></dialog><dialog id="restore-dialog" aria-labelledby="restore-title"><div class="dialog-kicker">LOKALE SICHERUNG</div><h2 id="restore-title">Aufzeichnung wiederherstellen</h2><p>Im Browser liegt eine gesicherte Aufzeichnung aus einer früheren Sitzung. Sie enthält ausschließlich empfangene Messwerte.</p><div class="dialog-facts"><div class="data-line"><span>Gerät / Flug</span><output id="restore-key">—</output></div><div class="data-line"><span>Messwerte</span><output id="restore-count">—</output></div><div class="data-line"><span>Zuletzt gesichert</span><output id="restore-saved">—</output></div><div class="data-line"><span>CSV-Export</span><output id="restore-exported">—</output></div></div><div class="status-message" id="restore-message" role="status"></div><div class="dialog-actions"><button class="quiet" id="restore-discard">Verwerfen</button><button class="primary" id="restore-accept">Wiederherstellen</button></div></dialog>
+<dialog id="new-recording-dialog" aria-labelledby="new-recording-title"><div class="dialog-kicker">AUFZEICHNUNG</div><h2 id="new-recording-title">Neue Aufzeichnung beginnen</h2><p id="new-recording-text"></p><div class="dialog-actions"><button class="quiet" id="new-recording-cancel">Abbrechen</button><button class="quiet" id="new-recording-export"><svg class="icon"><use href="#i-export"/></svg>CSV exportieren</button><button class="primary" id="new-recording-confirm">Neu beginnen</button></div></dialog>
+<div class="toast" id="toast" role="status" hidden></div><pre class="print-protocol" id="print-protocol" aria-hidden="true"></pre><noscript><p style="padding:25px">Für die Bodenstation muss JavaScript aktiviert sein.</p></noscript>
+<script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  // Reference values only. The flight firmware must enforce these independently.
+  // No serial writer, outbound configuration command or ignition function exists.
+  const FIRMWARE_PROFILE = Object.freeze({
+    id: 'TRS-FC-01',
+    pyro2HeightM: 150,
+    apogeeDelayMs: 500
+  });
+  const LIMITS = Object.freeze({
+    staleMs: 2000,
+    batteryMinV: 3.6,
+    flashMinPct: 10,
+    minSatellites: 6,
+    maxHdop: 2.5,
+    maxLine: 8192,
+    maxSamples: 60000
+  });
+  const PHASES = Object.freeze({
+    ready: 'Bereit',
+    boost: 'Antrieb',
+    coast: 'Freiflug',
+    apogee: 'Apogäum',
+    descent: 'Abstieg',
+    landed: 'Gelandet'
+  });
+  const phaseKeys = Object.keys(PHASES),
+    tabNames = ['systeme', 'startcheck', 'flug', 'bergung', 'auswertung', 'einstellungen'];
+  const formatters = new Map();
+
+  function fmt(n, d = 1) {
+    if (n === null || n === undefined || !Number.isFinite(n)) return '—';
+    if (!formatters.has(d)) formatters.set(d, new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: d,
+      maximumFractionDigits: d
+    }));
+    return formatters.get(d).format(Math.abs(n) < .5 * 10 ** -d ? 0 : n);
+  }
+  const unit = (n, u, d = 1) => `${fmt(n,d)} ${u}`;
+  const switchLabel = (value, armed = false) => value === true ? (armed ? 'SCHARF' : 'EIN') : value === false ? (armed ? 'GESICHERT' : 'AUS') : 'UNBEKANNT';
+  const text = (id, value) => {
+    const el = $(id);
+    if (el.textContent !== String(value)) el.textContent = value;
+  };
+  const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const timeOf = date => new Date(date).toLocaleTimeString('de-DE', {
+    hour12: false
+  });
+
+  function stateLabel(id, label, tone = '') {
+    const el = $(id);
+    el.className = `state ${tone}`;
+    el.replaceChildren();
+    const dot = document.createElement('i');
+    dot.className = 'dot';
+    el.append(dot, document.createTextNode(label));
+  }
+
+  function flightTime(t) {
+    if (t === null || !Number.isFinite(t)) return 'T+—:—';
+    const n = Math.floor(t * 10 + 1e-7);
+    return `T+${String(Math.floor(n/600)).padStart(2,'0')}:${String(Math.floor(n/10)%60).padStart(2,'0')},${n%10}`;
+  }
+  const state = {
+    connected: false,
+    connecting: false,
+    closing: false,
+    port: null,
+    reader: null,
+    readTask: null,
+    packet: null,
+    lastAt: null,
+    lastFix: null,
+    received: 0,
+    rejected: 0,
+    rxTimes: [],
+    lastSeq: null,
+    flightKey: null,
+    samples: [],
+    events: [],
+    max: {
+      height: 0,
+      velocity: 0,
+      g: 0
+    },
+    landed: false,
+    bufferFull: false,
+    manual: {},
+    approved: null,
+    base: null,
+    activeTab: 'systeme',
+    step: 0,
+    lastCheckKey: '',
+    lastInvalidLog: 0
+  };
+  // Receiver diagnostics, recording safety and reconnect state (all local, receive-only).
+  const DIAG = Object.freeze({
+    rawLogLines: 5000,
+    shownLines: 50,
+    maxStoredLine: 2000,
+    lossWindowMs: 10000,
+    reconnectMs: 2000
+  });
+  Object.assign(state, {
+    rawLog: [],
+    rawVersion: 0,
+    missed: 0,
+    seqWindow: [],
+    exportedCount: 0,
+    recordingStartedAt: Date.now(),
+    restored: false,
+    closedFlightKey: null,
+    pendingPersist: [],
+    metaDirty: false,
+    restorePending: false,
+    reconnect: null,
+    lastPort: null,
+    portInfo: null,
+    fixHistory: [],
+    lastProtocol: null,
+    bannerShown: false,
+    bannerDismissedFor: null
+  });
+  const backup = {
+    db: null,
+    status: 'pending',
+    savedAt: null,
+    busy: false
+  };
+  const wake = {
+    sentinel: null,
+    status: 'inactive',
+    pending: false
+  };
+  let holdStart = null,
+    holdFrame = null,
+    toastTimer, chartsDirty = true,
+    lastChartTime = 0,
+    renderedRawVersion = -1;
+
+  function notify(message) {
+    text('toast', message);
+    $('toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').hidden = true, 4000);
+  }
+
+  function fresh() {
+    return state.connected && state.packet !== null && state.lastAt !== null && Date.now() - state.lastAt <= LIMITS.staleMs;
+  }
+
+  function profileMatches(p) {
+    return !!p && p.profile_id === FIRMWARE_PROFILE.id && p.pyro2_height_m === FIRMWARE_PROFILE.pyro2HeightM && p.apogee_delay_ms === FIRMWARE_PROFILE.apogeeDelayMs;
+  }
+
+  function inFlight() {
+    return fresh() && state.packet.phase !== 'ready' && state.packet.phase !== 'landed';
+  }
+  const steps = [{
+    title: 'Systeme',
+    sub: 'Automatische Befunde',
+    heading: 'Messkette verifizieren',
+    description: 'Die Befunde kommen ausschließlich aus gültiger, aktueller Telemetrie. Fehlende Angaben bleiben offen.',
+    items: []
+  }, {
+    title: 'Aufbau',
+    sub: 'Struktur & Befestigung',
+    heading: 'Aufbau kontrollieren',
+    description: 'Jeden Befund nach der Prüfung einzeln bestätigen. Eine Bestätigung lässt sich durch erneutes Anklicken zurücknehmen.',
+    items: [
+      ['structure', 'Mechanik geprüft', 'Zustand und Sitz der Baugruppen kontrolliert.'],
+      ['mounting', 'Befestigungen geprüft', 'Flugcomputer und Akku auf festen Sitz geprüft.']
+    ]
+  }, {
+    title: 'Bergung',
+    sub: 'System & Einbau',
+    heading: 'Bergung kontrollieren',
+    description: 'Die Prüfung des Bergungssystems dokumentieren. Elektrische Durchgänge werden separat aus der Telemetrie übernommen.',
+    items: [
+      ['recovery', 'Bergungssystem geprüft', 'Fallschirme und mechanische Anbindungen geprüft.'],
+      ['installation', 'Einbau geprüft', 'Einbau des Bergungssystems abschließend kontrolliert.']
+    ]
+  }, {
+    title: 'Startplatz',
+    sub: 'Bereich & Verantwortung',
+    heading: 'Startumgebung prüfen',
+    description: 'Die örtlichen Prüfungen für diesen Flug bestätigen. Diese Angaben stammen von dir und werden nicht aus Sensorwerten abgeleitet.',
+    items: [
+      ['range', 'Startbereich geprüft', 'Startbereich und örtliche Freigabe geklärt.'],
+      ['recoveryArea', 'Bergungsraum geprüft', 'Erwarteten Bergungsraum und Bedingungen geprüft.'],
+      ['responsibility', 'Startverantwortung geklärt', 'Verantwortliche Person und Ablauf abgestimmt.']
+    ]
+  }, {
+    title: 'Abschluss',
+    sub: 'Prüfung zusammenführen',
+    heading: 'Prüfung abschließen',
+    description: 'Alle manuellen Befunde und aktuellen Hardware-Prüfungen müssen erfüllt sein. Die Freigabe gilt nur für diese Sitzung und diese Flugkennung.',
+    items: []
+  }];
+  const manualItems = steps.flatMap(s => s.items);
+
+  function automaticChecks() {
+    const p = state.packet,
+      live = fresh();
+    return [{
+      name: 'Empfänger & aktueller Datenstrom',
+      pass: live,
+      detail: state.connected ? 'Wartet auf Paket' : 'Nicht verbunden'
+    }, {
+      name: 'Barometer & IMU betriebsbereit',
+      pass: live && p.baro_ok === true && p.imu_ok === true,
+      detail: 'Befund ausstehend'
+    }, {
+      name: 'GPS-Fix & Positionsqualität',
+      pass: live && p.gps_fix === 3 && p.lat !== null && p.lon !== null && p.satellites >= LIMITS.minSatellites && p.hdop !== null && p.hdop <= LIMITS.maxHdop,
+      detail: 'Fix ausstehend'
+    }, {
+      name: 'Akku & Log-Speicher',
+      pass: live && p.battery_v !== null && p.battery_v >= LIMITS.batteryMinV && p.flash_free_pct !== null && p.flash_free_pct >= LIMITS.flashMinPct,
+      detail: 'Befund ausstehend'
+    }, {
+      name: 'Beide Pyro-Durchgänge',
+      pass: live && p.pyro1_continuity === true && p.pyro2_continuity === true && p.pyro1_fired === false && p.pyro2_fired === false,
+      detail: 'Durchgang unbekannt'
+    }, {
+      name: 'Haupt- & Scharfschalter',
+      pass: live && p.main_switch === true && p.armed_switch === true,
+      detail: 'Schalter nicht bestätigt'
+    }, {
+      name: 'Festes Firmwareprofil identisch',
+      pass: live && profileMatches(p),
+      detail: 'Abgleich ausstehend'
+    }];
+  }
+
+  function canApprove() {
+    return fresh() && state.packet.phase === 'ready' && automaticChecks().every(c => c.pass) && manualItems.every(([id]) => state.manual[id]);
+  }
+
+  function invalidateApproval(reason) {
+    if (!state.approved) return;
+    state.approved = null;
+    cancelHold();
+    addEvent('Startfreigabe zurückgenommen', reason, 'status');
+  }
+
+  function validateApproval() {
+    if (state.approved && !canApprove()) {
+      if (inFlight() || state.packet?.phase === 'landed') state.approved = null;
+      else invalidateApproval('Voraussetzungen nicht mehr erfüllt. Erneute Prüfung erforderlich.');
+    }
+  }
+
+  function selectTab(name, focus = false) {
+    if (!tabNames.includes(name)) name = 'systeme';
+    state.activeTab = name;
+    for (const tab of document.querySelectorAll('[data-tab]')) {
+      const active = tab.dataset.tab === name;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      if (active && focus) tab.focus();
+    }
+    for (const other of tabNames) $('view-' + other).hidden = other !== name;
+    try {
+      history.replaceState(null, '', '#' + name);
+    } catch {}
+    chartsDirty = true;
+    keepTabVisible(name);
+    if (name === 'startcheck') renderChecklist(true);
+    render();
+  }
+  document.querySelectorAll('[data-tab]').forEach(tab => {
+    tab.addEventListener('click', () => selectTab(tab.dataset.tab));
+    tab.addEventListener('keydown', event => {
+      const i = tabNames.indexOf(tab.dataset.tab);
+      let next;
+      if (event.key === 'ArrowRight') next = (i + 1) % tabNames.length;
+      else if (event.key === 'ArrowLeft') next = (i + tabNames.length - 1) % tabNames.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabNames.length - 1;
+      else return;
+      event.preventDefault();
+      selectTab(tabNames[next], true);
+    });
+  });
+  document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => selectTab(button.dataset.go)));
+  window.addEventListener('hashchange', () => selectTab(location.hash.slice(1)));
+
+  function renderStepRail() {
+    const rail = $('procedure-steps');
+    rail.replaceChildren();
+    steps.forEach((step, index) => {
+      const button = document.createElement('button');
+      button.className = 'procedure-step';
+      button.setAttribute('aria-current', index === state.step ? 'step' : 'false');
+      const complete = index === 0 ? automaticChecks().every(c => c.pass) : index === 4 ? !!state.approved : step.items.every(([id]) => state.manual[id]);
+      button.classList.toggle('complete', complete);
+      button.innerHTML = `<span class="step-circle">${complete?'✓':String(index+1).padStart(2,'0')}</span><span><strong>${step.title}</strong><small>${step.sub}</small></span>`;
+      button.addEventListener('click', () => {
+        cancelHold();
+        state.step = index;
+        renderChecklist(true);
+      });
+      rail.append(button);
+    });
+  }
+
+  function renderChecklist(force = false) {
+    const auto = automaticChecks(),
+      manualCount = manualItems.filter(([id]) => state.manual[id]).length,
+      autoCount = auto.filter(c => c.pass).length;
+    const key = JSON.stringify([state.step, state.manual, state.approved, auto.map(c => c.pass), state.connected, inFlight(), state.packet?.phase]);
+    text('tab-check-count', `${manualCount}/7`);
+    text('auto-progress', `${autoCount} / 7`);
+    text('manual-progress', `${manualCount} / 7`);
+    for (const [id, count] of [
+        ['auto-segments', autoCount],
+        ['manual-segments', manualCount]
+      ]) $(id).innerHTML = Array.from({
+      length: 7
+    }, (_, i) => `<i class="${i<count?'filled':''}"></i>`).join('');
+    const word = inFlight() ? 'Flug läuft' : state.approved ? 'Startbereit' : canApprove() ? 'Prüfung bereit' : 'Gesperrt';
+    text('clearance-word', word);
+    $('clearance-word').className = 'clearance-word' + (state.approved ? ' ok' : '');
+    text('clearance-description', inFlight() ? 'Die Flugphase wird vom Flugcomputer gemeldet.' : state.approved ? 'Alle Befunde bestätigt. Gültigkeit wird laufend überwacht.' : canApprove() ? 'Alle Befunde erfüllt. Abschluss in Schritt 05 bestätigen.' : 'Automatische und manuelle Befunde müssen vollständig sein.');
+    stateLabel('check-head-state', state.approved ? 'Startbereit' : inFlight() ? 'Flug läuft' : 'Prüfung offen', state.approved ? 'good' : inFlight() ? 'live' : '');
+    const blockers = [];
+    if (autoCount < 7) blockers.push(`${7-autoCount} automatische Prüfungen offen`);
+    if (manualCount < 7) blockers.push(`${7-manualCount} manuelle Befunde offen`);
+    if (canApprove() && !state.approved) blockers.push('Abschlussbestätigung ausstehend');
+    $('clearance-blockers').replaceChildren(...blockers.map(s => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      return li;
+    }));
+    $('reset-check').disabled = inFlight();
+    if (!force && key === state.lastCheckKey) return;
+    state.lastCheckKey = key;
+    cancelHold();
+    renderStepRail();
+    const step = steps[state.step],
+      content = $('procedure-content');
+    content.replaceChildren();
+    const heading = document.createElement('div');
+    heading.innerHTML = `<div class="procedure-kicker">PRÜFSCHRITT / ${String(state.step+1).padStart(2,'0')}</div><h3>${step.heading}</h3><p class="procedure-description">${step.description}</p>`;
+    content.append(heading);
+    if (state.step === 0) {
+      auto.forEach((check, i) => {
+        const row = document.createElement('div');
+        row.className = 'auto-row';
+        row.innerHTML = `<span class="auto-number">${String(i+1).padStart(2,'0')}</span><strong>${check.name}</strong><span class="state ${check.pass?'good':''}"><i class="dot"></i>${check.pass?'Erfüllt':check.detail}</span>`;
+        content.append(row);
+      });
+    } else if (state.step === 4) {
+      const summary = document.createElement('div');
+      summary.className = 'completion-summary';
+      summary.innerHTML = `<div><span>AUTOMATISCHE BEFUNDE</span><output>${autoCount} / 7</output></div><div><span>MANUELLE BEFUNDE</span><output>${manualCount} / 7</output></div>`;
+      content.append(summary);
+      const profile = document.createElement('p');
+      profile.className = 'small muted';
+      profile.textContent = `Sollprofil ${FIRMWARE_PROFILE.id} · Pyro 1: Apogäum + ${FIRMWARE_PROFILE.apogeeDelayMs} ms · Pyro 2: ${FIRMWARE_PROFILE.pyro2HeightM} m im Abstieg.`;
+      content.append(profile);
+      if (state.approved) {
+        const done = document.createElement('div');
+        done.className = 'signed-off';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Startcheck abgeschlossen';
+        const p = document.createElement('p');
+        p.textContent = `${timeOf(state.approved.at)} · ${state.approved.device} / ${state.approved.flight}`;
+        done.append(strong, p);
+        content.append(done);
+      } else {
+        const hold = document.createElement('button');
+        hold.id = 'approve-hold';
+        hold.className = 'primary hold-button';
+        hold.textContent = canApprove() ? 'Prüfung bestätigen · gedrückt halten' : 'Abschluss gesperrt';
+        hold.disabled = !canApprove();
+        hold.addEventListener('pointerdown', e => {
+          if (e.button !== 0) return;
+          hold.setPointerCapture?.(e.pointerId);
+          startHold();
+        });
+        for (const type of ['pointerup', 'pointercancel', 'lostpointercapture', 'blur']) hold.addEventListener(type, cancelHold);
+        hold.addEventListener('keydown', e => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            if (!e.repeat) startHold();
+          }
+        });
+        hold.addEventListener('keyup', cancelHold);
+        content.append(hold);
+        const hint = document.createElement('p');
+        hint.className = 'hold-hint';
+        hint.textContent = canApprove() ? '1,2 s halten · alternativ Leertaste oder Eingabetaste' : 'Gültige Telemetrie und alle Bestätigungen erforderlich.';
+        content.append(hint);
+      }
+      renderProtocolActions(content);
+    } else {
+      step.items.forEach(([id, title, description], i) => {
+        const row = document.createElement('button'),
+          done = state.manual[id];
+        row.className = 'response-row' + (done ? ' confirmed' : '');
+        row.setAttribute('aria-pressed', String(!!done));
+        row.disabled = inFlight();
+        row.innerHTML = `<span class="response-number">${done?'✓':String(i+1).padStart(2,'0')}</span><span class="response-text"><strong>${title}</strong><small>${description}</small></span><span class="response-action">${done?'Bestätigt':'Bestätigen'}${icon(done?'check':'arrow')}</span>`;
+        row.addEventListener('click', () => {
+          invalidateApproval('Ein manueller Befund wurde geändert.');
+          if (state.manual[id]) delete state.manual[id];
+          else state.manual[id] = Date.now();
+          renderChecklist(true);
+          render();
+        });
+        content.append(row);
+      });
+    }
+    text('step-pagination', `SCHRITT ${String(state.step+1).padStart(2,'0')} / 05`);
+    $('check-back').disabled = state.step === 0;
+    $('check-next').hidden = state.step === 4;
+    $('check-next').disabled = state.step > 0 && step.items.some(([id]) => !state.manual[id]);
+  }
+
+  function cancelHold() {
+    holdStart = null;
+    if (holdFrame !== null) cancelAnimationFrame(holdFrame);
+    holdFrame = null;
+    const b = $('approve-hold');
+    if (b) b.style.setProperty('--hold', '0%');
+  }
+
+  function startHold() {
+    if (!canApprove() || holdStart !== null) return;
+    holdStart = performance.now();
+    const animate = now => {
+      if (holdStart === null || !canApprove()) {
+        cancelHold();
+        return;
+      }
+      const fraction = Math.min(1, (now - holdStart) / 1200);
+      $('approve-hold')?.style.setProperty('--hold', `${fraction*100}%`);
+      if (fraction < 1) {
+        holdFrame = requestAnimationFrame(animate);
+        return;
+      }
+      state.approved = {
+        at: Date.now(),
+        device: state.packet.device_id,
+        flight: state.packet.flight_id
+      };
+      state.lastProtocol = buildProtocol(state.approved.at);
+      state.metaDirty = true;
+      holdStart = null;
+      holdFrame = null;
+      addEvent('Startcheck abgeschlossen', 'Alle lokalen und empfangenen Befunde erfüllt.', 'status');
+      renderChecklist(true);
+      render();
+    };
+    holdFrame = requestAnimationFrame(animate);
+  }
+  $('check-back').addEventListener('click', () => {
+    state.step = Math.max(0, state.step - 1);
+    renderChecklist(true);
+  });
+  $('check-next').addEventListener('click', () => {
+    state.step = Math.min(4, state.step + 1);
+    renderChecklist(true);
+  });
+  $('reset-check').addEventListener('click', () => {
+    if (inFlight()) return;
+    invalidateApproval('Prüfung neu begonnen.');
+    state.manual = {};
+    state.step = 0;
+    renderChecklist(true);
+    render();
+    notify('Startcheck zurückgesetzt. Alle manuellen Befunde sind wieder offen.');
+  });
+  /** TRS/1 receiver contract (DRAFT, coordinate with receiver firmware before use).
+   * One UTF-8 JSON object per LF. No outbound messages. seq: uint32, strictly ordered.
+   * Required: type="telemetry", protocol=1, integrity_ok=true, device_id, flight_id,
+   * seq, flight_time_s, phase (ready|boost|coast|apogee|descent|landed), altitude_m,
+   * velocity_m_s, acceleration_g (vertical, gravity removed). Other keys below.
+   * Optional strings: profile_id (≤48 chars), fw_version (1–32 printable ASCII chars).
+   * Missing fields remain unknown. The radio receiver must verify packet integrity
+   * BEFORE setting integrity_ok=true; this UI cannot replace its CRC validation.
+   */
+  const OPTIONAL_FIELDS = {
+    pressure_hpa: [0, 1500],
+    accel_x_g: [-32, 32],
+    accel_y_g: [-32, 32],
+    accel_z_g: [-32, 32],
+    battery_v: [0, 20],
+    satellites: [0, 100],
+    gps_fix: [0, 3],
+    hdop: [0, 100],
+    lat: [-90, 90],
+    lon: [-180, 180],
+    rssi_dbm: [-160, 20],
+    snr_db: [-40, 40],
+    flash_free_pct: [0, 100],
+    logging_hz: [1, 10000],
+    frequency_mhz: [100, 1000],
+    pyro2_height_m: [0, 5000],
+    apogee_delay_ms: [0, 60000]
+  };
+  const BOOLEAN_FIELDS = ['baro_ok', 'imu_ok', 'main_switch', 'armed_switch', 'pyro1_continuity', 'pyro2_continuity', 'pyro1_fired', 'pyro2_fired'];
+
+  function finiteRange(v, min, max) {
+    return typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+  }
+
+  function normalizePacket(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.type !== 'telemetry' || raw.protocol !== 1 || raw.integrity_ok !== true) throw new Error('Paketkopf oder Integritätsbefund ungültig');
+    for (const key of ['device_id', 'flight_id'])
+      if (typeof raw[key] !== 'string' || !raw[key].trim() || raw[key].length > 48 || /[\x00-\x1f]/.test(raw[key])) throw new Error('Geräte- oder Flugkennung ungültig');
+    if (!Number.isInteger(raw.seq) || raw.seq < 0 || raw.seq > 4294967295 || !Object.hasOwn(PHASES, raw.phase)) throw new Error('Sequenz oder Flugphase ungültig');
+    for (const [key, min, max] of [
+        ['flight_time_s', 0, 86400],
+        ['altitude_m', -1000, 50000],
+        ['velocity_m_s', -2000, 2000],
+        ['acceleration_g', -32, 32]
+      ])
+      if (!finiteRange(raw[key], min, max)) throw new Error('Pflichtmesswert ungültig');
+    const p = {
+      type: 'telemetry',
+      protocol: 1,
+      device_id: raw.device_id,
+      flight_id: raw.flight_id,
+      seq: raw.seq,
+      phase: raw.phase,
+      flight_time_s: raw.flight_time_s,
+      altitude_m: raw.altitude_m,
+      velocity_m_s: raw.velocity_m_s,
+      acceleration_g: raw.acceleration_g,
+      profile_id: typeof raw.profile_id === 'string' ? raw.profile_id.slice(0, 48) : null,
+      fw_version: null
+    };
+    if (raw.fw_version !== null && raw.fw_version !== undefined) {
+      if (typeof raw.fw_version !== 'string' || !/^[\x20-\x7e]{1,32}$/.test(raw.fw_version)) throw new Error('Firmware-Version ungültig');
+      p.fw_version = raw.fw_version;
+    }
+    for (const [key, [min, max]] of Object.entries(OPTIONAL_FIELDS)) {
+      if (raw[key] === null || raw[key] === undefined) p[key] = null;
+      else if (finiteRange(raw[key], min, max)) p[key] = raw[key];
+      else throw new Error('Zusatzmesswert ungültig');
+    }
+    for (const key of ['satellites', 'gps_fix', 'logging_hz', 'apogee_delay_ms'])
+      if (p[key] !== null && !Number.isInteger(p[key])) throw new Error('Ganzzahliger Messwert erwartet');
+    for (const key of BOOLEAN_FIELDS) {
+      if (raw[key] === null || raw[key] === undefined) p[key] = null;
+      else if (typeof raw[key] === 'boolean') p[key] = raw[key];
+      else throw new Error('Statuswert ungültig');
+    }
+    return p;
+  }
+
+  function rejectPacket(reason) {
+    state.rejected++;
+    if (Date.now() - state.lastInvalidLog > 5000) {
+      addEvent('Paket verworfen', reason, 'link');
+      state.lastInvalidLog = Date.now();
+    }
+  }
+
+  function logRaw(line, status, reason = '') {
+    state.rawLog.push({
+      at: Date.now(),
+      status,
+      reason,
+      line: line.length > DIAG.maxStoredLine ? line.slice(0, DIAG.maxStoredLine) + ' …' : line
+    });
+    if (state.rawLog.length > DIAG.rawLogLines) state.rawLog.splice(0, state.rawLog.length - DIAG.rawLogLines);
+    state.rawVersion++;
+  }
+
+  function receiveLine(line) {
+    if (!line.trim()) return;
+    try {
+      if (line.length > LIMITS.maxLine) throw new Error('Paket zu lang');
+      acceptPacket(normalizePacket(JSON.parse(line)));
+      logRaw(line, 'ok');
+    } catch (error) {
+      const reason = error instanceof SyntaxError ? 'Kein gültiges JSON' : (error.message || 'Ungültiges Paket');
+      logRaw(line, 'rejected', reason);
+      rejectPacket(reason);
+    }
+  }
+  // Share of sequence numbers missing within the recent window; null without live data.
+  function lossPercent() {
+    if (!fresh()) return null;
+    const now = Date.now(),
+      recent = state.seqWindow.filter(e => e.at > now - DIAG.lossWindowMs);
+    if (!recent.length) return null;
+    const missed = recent.reduce((sum, e) => sum + e.missed, 0);
+    return missed / (missed + recent.length) * 100;
+  }
+
+  function acceptPacket(p) {
+    if (!state.connected) throw new Error('Kein aktiver Empfänger');
+    const key = `${p.device_id}/${p.flight_id}`,
+      previous = state.packet;
+    if (state.flightKey && key !== state.flightKey && state.samples.length) throw new Error('Abweichende Flugkennung: Aufzeichnung exportieren, dann unter Auswertung neue Aufzeichnung beginnen');
+    let missed = 0;
+    if (state.flightKey === key && state.lastSeq !== null) {
+      const diff = (p.seq - state.lastSeq + 4294967296) % 4294967296;
+      if (diff === 0 || diff >= 2147483648) throw new Error('Doppeltes oder verspätetes Paket');
+      if (previous && p.flight_time_s < previous.flight_time_s) throw new Error('Rückläufige Flugzeit');
+      missed = diff - 1;
+    }
+    if (state.flightKey && key !== state.flightKey) {
+      invalidateApproval('Geräte- oder Flugkennung geändert.');
+      state.manual = {};
+      state.lastCheckKey = '';
+    }
+    state.flightKey = key;
+    state.lastSeq = p.seq;
+    state.packet = p;
+    state.lastAt = Date.now();
+    state.received++;
+    state.rxTimes.push(state.lastAt);
+    state.rxTimes = state.rxTimes.filter(t => t > state.lastAt - 2000);
+    state.missed += missed;
+    state.seqWindow.push({
+      at: state.lastAt,
+      missed
+    });
+    state.seqWindow = state.seqWindow.filter(e => e.at > state.lastAt - DIAG.lossWindowMs);
+    if (p.gps_fix === 3 && p.lat !== null && p.lon !== null) noteFix(p, state.lastAt);
+    if (!previous || previous.device_id !== p.device_id || previous.flight_id !== p.flight_id) addEvent('Flugcomputer erkannt', `${p.device_id} / ${p.flight_id}`, 'link');
+    if (!previous || p.phase !== previous.phase) addEvent(`Flugphase: ${PHASES[p.phase]}`, p.phase === 'apogee' ? `Empfangene Höhe ${unit(p.altitude_m,'m')}` : 'Vom Flugcomputer gemeldet.', 'phase', p.flight_time_s);
+    if (previous && p.phase !== previous.phase && previous.device_id === p.device_id && previous.flight_id === p.flight_id) tone(p.phase === 'landed' ? TONES.landed : TONES.phase);
+    for (const n of [1, 2])
+      if (p[`pyro${n}_fired`] === true && previous?.[`pyro${n}_fired`] !== true) {
+        addEvent(`Pyro ${n} ausgelöst`, 'Empfangenes Hardware-Statusereignis.', 'pyro', p.flight_time_s);
+        if (previous) tone(TONES.pyro);
+      }
+    // A flight closed via "Neue Aufzeichnung" is not recorded again while its computer keeps transmitting.
+    if (p.phase !== 'ready' && !state.landed && !state.bufferFull && key !== state.closedFlightKey) {
+      if (state.samples.length >= LIMITS.maxSamples) {
+        state.bufferFull = true;
+        addEvent('Aufzeichnung voll', 'CSV exportieren. Der Live-Empfang bleibt aktiv.', 'status');
+      } else {
+        const sample = {
+          ...p,
+          received_at: state.lastAt
+        };
+        state.samples.push(sample);
+        state.pendingPersist.push(sample);
+        state.max.height = Math.max(state.max.height, p.altitude_m);
+        state.max.velocity = Math.max(state.max.velocity, Math.abs(p.velocity_m_s));
+        state.max.g = Math.max(state.max.g, Math.abs(p.acceleration_g));
+        if (p.phase === 'landed') state.landed = true;
+        chartsDirty = true;
+      }
+    }
+    validateApproval();
+    render();
+  }
+
+  function addEvent(title, description, kind = 'status', flightT = null, at = Date.now()) {
+    const event = {
+      title,
+      description,
+      kind,
+      flightT,
+      at
+    };
+    state.events.push(event);
+    if (state.events.length > 500) state.events.shift();
+    state.metaDirty = true;
+    $('event-empty')?.remove();
+    const row = document.createElement('div');
+    row.className = `event ${kind}`;
+    const time = document.createElement('time');
+    time.textContent = timeOf(event.at);
+    if (flightT !== null) {
+      const relative = document.createElement('span');
+      relative.textContent = flightTime(flightT);
+      time.append(relative);
+    }
+    const body = document.createElement('div'),
+      strong = document.createElement('strong'),
+      detail = document.createElement('p');
+    strong.textContent = title;
+    detail.textContent = description;
+    body.append(strong, detail);
+    row.append(time, body);
+    $('event-list').prepend(row);
+    if ($('event-list').children.length > 500) $('event-list').lastElementChild.remove();
+    text('event-count', String(state.events.length).padStart(2, '0'));
+  }
+
+  function serialSupported() {
+    return !!navigator.serial && window.isSecureContext;
+  }
+
+  function openConnectionDialog() {
+    text('dialog-baud', `${fmt(Number($('baud-rate').value),0)} Baud / 8N1`);
+    text('serial-support', serialSupported() ? 'USB-Empfänger auswählen und Telemetrie empfangen. Die Schnittstelle wird ausschließlich lesend verwendet.' : 'Dieser Browser stellt Web Serial hier nicht bereit. Für den USB-Empfang einen Browser mit Web-Serial-Unterstützung verwenden, zum Beispiel Chrome oder Edge.');
+    $('select-port').disabled = !serialSupported() || state.connecting;
+    text('serial-message', '');
+    $('connection-dialog').showModal();
+  }
+  const baudLabel = () => `${fmt(Number($('baud-rate').value),0)} Baud`;
+  // Opens a port read-only. Used for the manual selection and the automatic reconnect.
+  async function openPort(port, automatic = false) {
+    state.connecting = true;
+    render();
+    let opened = false;
+    try {
+      await port.open({
+        baudRate: Number($('baud-rate').value),
+        dataBits: 8,
+        stopBits: 1,
+        parity: 'none',
+        flowControl: 'none'
+      });
+      opened = true;
+      if (!port.readable) throw new Error('Kein lesbarer Datenstrom');
+    } catch (error) {
+      if (opened) {
+        try {
+          await port.close();
+        } catch {}
+      }
+      state.connecting = false;
+      render();
+      if (automatic) return false;
+      throw error;
+    }
+    const wasReconnect = !!state.reconnect;
+    stopReconnect();
+    Object.assign(state, {
+      port,
+      lastPort: port,
+      portInfo: port.getInfo?.() ?? null,
+      connected: true,
+      connecting: false,
+      closing: false,
+      lastSeq: null,
+      packet: null,
+      lastAt: null,
+      rxTimes: [],
+      seqWindow: []
+    });
+    addEvent(wasReconnect ? 'USB-Empfänger wieder verbunden' : 'USB-Empfänger verbunden', `${baudLabel()} · wartet auf gültige Telemetrie.`, 'link');
+    updateWakeLock();
+    render();
+    state.readTask = readPort(port);
+    return true;
+  }
+  async function connect() {
+    if (state.connected || state.connecting || state.closing) return;
+    stopReconnect();
+    state.connecting = true;
+    $('select-port').disabled = true;
+    text('serial-message', 'Empfänger auswählen …');
+    try {
+      const port = await navigator.serial.requestPort();
+      await openPort(port);
+      $('connection-dialog').close();
+    } catch (error) {
+      state.connecting = false;
+      text('serial-message', error.name === 'NotFoundError' ? 'Auswahl abgebrochen. Keine Verbindung hergestellt.' : 'Verbindung nicht möglich. Portbelegung und USB-Verbindung prüfen.');
+    } finally {
+      $('select-port').disabled = !serialSupported() || state.connected;
+      render();
+    }
+  }
+  async function readPort(port) {
+    // Non-fatal decoding: a corrupted byte rejects one line instead of ending the connection.
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '',
+      dropping = false,
+      unexpected = false;
+    try {
+      const reader = port.readable.getReader();
+      state.reader = reader;
+      while (state.connected && !state.closing) {
+        const {
+          value,
+          done
+        } = await reader.read();
+        if (done) {
+          unexpected = !state.closing;
+          break;
+        }
+        buffer += decoder.decode(value, {
+          stream: true
+        });
+        let end;
+        while ((end = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.slice(0, end).replace(/\r$/, '');
+          buffer = buffer.slice(end + 1);
+          if (dropping) {
+            dropping = false;
+            continue;
+          }
+          receiveLine(line);
+        }
+        if (buffer.length > LIMITS.maxLine) {
+          logRaw(`[über ${fmt(LIMITS.maxLine,0)} Zeichen ohne Zeilenende]`, 'rejected', 'Zeilenlänge überschritten');
+          buffer = '';
+          dropping = true;
+          rejectPacket('Zeilenlänge überschritten');
+        }
+      }
+    } catch {
+      unexpected = !state.closing;
+    } finally {
+      state.closing = true;
+      try {
+        state.reader?.releaseLock();
+      } catch {}
+      state.reader = null;
+      state.connected = false;
+      state.rxTimes = [];
+      invalidateApproval('USB-Empfänger getrennt.');
+      try {
+        await port.close();
+      } catch {}
+      state.port = null;
+      state.closing = false;
+      if (unexpected) {
+        addEvent('USB-Verbindung verloren', 'Datenstrom unerwartet beendet. Automatische Wiederverbindung läuft.', 'link');
+        scheduleReconnect();
+      }
+      updateWakeLock();
+      render();
+    }
+  }
+  async function disconnect(user = true) {
+    if (user) stopReconnect();
+    if (!state.connected || state.closing) return;
+    state.closing = true;
+    state.connected = false;
+    invalidateApproval(user ? 'USB-Verbindung beendet.' : 'USB-Verbindung verloren.');
+    addEvent(user ? 'USB-Empfänger getrennt' : 'USB-Verbindung verloren', user ? 'Die vorhandene Aufzeichnung bleibt verfügbar.' : 'Gerät nicht mehr verfügbar. Automatische Wiederverbindung läuft.', 'link');
+    render();
+    try {
+      await state.reader?.cancel();
+      await state.readTask;
+    } catch {}
+    state.closing = false;
+    if (!user) scheduleReconnect();
+    updateWakeLock();
+    render();
+  }
+  // Automatic reconnect only after an unexpected loss, only to the previously selected receiver.
+  function portMatches(port) {
+    const a = state.portInfo,
+      b = port?.getInfo?.() ?? {};
+    return !!port && (port === state.lastPort || (!!a && a.usbVendorId !== undefined && a.usbVendorId === b.usbVendorId && a.usbProductId === b.usbProductId));
+  }
+
+  function scheduleReconnect(delay = 1000) {
+    if (!serialSupported() || !state.lastPort || state.connected) return;
+    if (!state.reconnect) {
+      state.reconnect = {
+        attempts: 0,
+        timer: null
+      };
+      updateWakeLock();
+    }
+    clearTimeout(state.reconnect.timer);
+    state.reconnect.timer = setTimeout(tryReconnect, delay);
+  }
+
+  function stopReconnect() {
+    if (!state.reconnect) return;
+    clearTimeout(state.reconnect.timer);
+    state.reconnect = null;
+    updateWakeLock();
+  }
+  async function tryReconnect() {
+    const attempt = state.reconnect;
+    if (!attempt) return;
+    if (state.connected) {
+      stopReconnect();
+      return;
+    }
+    if (state.connecting || state.closing) {
+      attempt.timer = setTimeout(tryReconnect, 500);
+      return;
+    }
+    attempt.attempts++;
+    let port = null;
+    try {
+      port = (await navigator.serial.getPorts()).find(portMatches) ?? null;
+    } catch {}
+    if (state.reconnect !== attempt) return;
+    if (port && await openPort(port, true)) return;
+    if (state.reconnect === attempt) attempt.timer = setTimeout(tryReconnect, DIAG.reconnectMs);
+    render();
+  }
+  $('connect-button').addEventListener('click', () => {
+    if (state.connected) disconnect();
+    else if (state.reconnect) {
+      stopReconnect();
+      addEvent('Wiederverbindung abgebrochen', 'Verbindung bei Bedarf manuell herstellen.', 'link');
+      render();
+    } else openConnectionDialog();
+  });
+  $('select-port').addEventListener('click', connect);
+  $('close-connection').addEventListener('click', () => $('connection-dialog').close());
+  navigator.serial?.addEventListener('disconnect', event => {
+    const port = event.port ?? event.target;
+    if (state.connected && port === state.port) disconnect(false);
+  });
+  navigator.serial?.addEventListener('connect', event => {
+    const port = event.port ?? event.target;
+    if (state.reconnect && portMatches(port)) {
+      clearTimeout(state.reconnect.timer);
+      state.reconnect.timer = setTimeout(tryReconnect, 300);
+    }
+  });
+
+  function theme(value) {
+    document.documentElement.dataset.theme = value;
+    $('theme-button').setAttribute('aria-label', value === 'light' ? 'Dunklen Modus aktivieren' : 'Hellen Modus aktivieren');
+    document.querySelectorAll('[data-theme-choice]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === value)));
+    try {
+      localStorage.setItem('trs-theme', value);
+    } catch {}
+    chartsDirty = true;
+  }
+  $('theme-button').addEventListener('click', () => theme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'));
+  document.querySelectorAll('[data-theme-choice]').forEach(b => b.addEventListener('click', () => theme(b.dataset.themeChoice)));
+  $('baud-rate').addEventListener('change', () => {
+    try {
+      localStorage.setItem('trs-baud', $('baud-rate').value);
+    } catch {}
+  });
+
+  function readBase() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem('trs-base'));
+      if (parsed && finiteRange(parsed.lat, -90, 90) && finiteRange(parsed.lon, -180, 180)) state.base = parsed;
+    } catch {}
+  }
+
+  function parseCoordinate(value, limit) {
+    const input = String(value).trim();
+    if (!/^[+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)$/.test(input)) return null;
+    const number = Number(input.replace(',', '.'));
+    return finiteRange(number, -limit, limit) ? number : null;
+  }
+  const formatCoordinate = value => fmt(value, 6);
+
+  function coordinateField(id, limit) {
+    const field = $(id),
+      value = parseCoordinate(field.value, limit);
+    field.setAttribute('aria-invalid', String(value === null));
+    field.setCustomValidity(value === null ? `Wert zwischen −${limit} und ${limit} Grad eingeben.` : '');
+    return value;
+  }
+
+  function saveBase(lat, lon) {
+    if (!finiteRange(lat, -90, 90) || !finiteRange(lon, -180, 180)) return;
+    state.base = {
+      lat,
+      lon
+    };
+    try {
+      localStorage.setItem('trs-base', JSON.stringify(state.base));
+    } catch {}
+    for (const [id, value] of [
+        ['base-lat', lat],
+        ['base-lon', lon]
+      ]) {
+      const field = $(id);
+      field.value = formatCoordinate(value);
+      field.setAttribute('aria-invalid', 'false');
+      field.setCustomValidity('');
+    }
+    text('location-message', 'Bezugspunkt gespeichert.');
+    renderRecovery();
+  }
+  for (const [id, limit] of [
+      ['base-lat', 90],
+      ['base-lon', 180]
+    ]) {
+    $(id).addEventListener('input', () => {
+      $(id).setCustomValidity('');
+      $(id).removeAttribute('aria-invalid');
+      text('location-message', '');
+    });
+    $(id).addEventListener('blur', () => {
+      if (!$(id).value.trim()) return;
+      const value = coordinateField(id, limit);
+      if (value !== null) $(id).value = formatCoordinate(value);
+      else text('location-message', `Gültigen Wert zwischen −${limit} und ${limit} Grad eingeben; Komma oder Punkt sind möglich.`);
+    });
+  }
+  $('location-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const lat = coordinateField('base-lat', 90),
+      lon = coordinateField('base-lon', 180);
+    if (lat === null || lon === null) {
+      text('location-message', 'Breite: −90 bis 90°. Länge: −180 bis 180°. Komma oder Punkt als Dezimaltrennzeichen verwenden.');
+      $(lat === null ? 'base-lat' : 'base-lon').focus();
+      return;
+    }
+    saveBase(lat, lon);
+  });
+  $('clear-location').addEventListener('click', () => {
+    state.base = null;
+    try {
+      localStorage.removeItem('trs-base');
+    } catch {}
+    for (const id of ['base-lat', 'base-lon']) {
+      $(id).value = '';
+      $(id).removeAttribute('aria-invalid');
+      $(id).setCustomValidity('');
+    }
+    text('location-message', 'Bezugspunkt entfernt.');
+    renderRecovery();
+  });
+  $('locate-button').addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      text('location-message', 'Standortbestimmung hier nicht verfügbar.');
+      return;
+    }
+    $('locate-button').disabled = true;
+    text('location-message', 'Position wird ermittelt …');
+    navigator.geolocation.getCurrentPosition(position => {
+      saveBase(position.coords.latitude, position.coords.longitude);
+      text('location-message', `Standort übernommen · Genauigkeit ±${fmt(position.coords.accuracy,0)} m`);
+      $('locate-button').disabled = false;
+    }, () => {
+      text('location-message', 'Standort nicht verfügbar. Koordinaten manuell eingeben.');
+      $('locate-button').disabled = false;
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
+  });
+
+  function relativePosition(base, fix) {
+    const rad = Math.PI / 180,
+      a = base.lat * rad,
+      b = fix.lat * rad,
+      dLat = b - a,
+      dLon = (fix.lon - base.lon) * rad,
+      h = Math.sin(dLat / 2) ** 2 + Math.cos(a) * Math.cos(b) * Math.sin(dLon / 2) ** 2;
+    const distance = 6371000 * 2 * Math.atan2(Math.sqrt(Math.min(1, h)), Math.sqrt(Math.max(0, 1 - h)));
+    const bearing = (Math.atan2(Math.sin(dLon) * Math.cos(b), Math.cos(a) * Math.sin(b) - Math.sin(a) * Math.cos(b) * Math.cos(dLon)) / rad + 360) % 360;
+    return {
+      distance,
+      bearing
+    };
+  }
+
+  function renderRecovery() {
+    const fix = state.lastFix;
+    let relative = null;
+    if (fix && state.base) relative = relativePosition(state.base, fix);
+    $('copy-position').disabled = !fix;
+    $('clear-location').hidden = !state.base;
+    text('location-saved', state.base ? `Bezug: ${fmt(state.base.lat,6)}°, ${fmt(state.base.lon,6)}°` : 'Noch kein Bezugspunkt festgelegt.');
+    text('recovery-lat', fix ? `${fmt(Math.abs(fix.lat),6)}° ${fix.lat<0?'S':'N'}` : '— ° N');
+    text('recovery-lon', fix ? `${fmt(Math.abs(fix.lon),6)}° ${fix.lon<0?'W':'O'}` : '— ° O');
+    $('recovery-distance').innerHTML = `${relative?fmt(relative.distance,0):'—'}<small class="unit">m</small>`;
+    $('recovery-bearing').innerHTML = `${relative?String(Math.round(relative.bearing)%360).padStart(3,'0'):'—'}<small class="unit">°</small>`;
+    const age = fix ? (Date.now() - fix.at) / 1000 : null;
+    stateLabel('recovery-state', fix ? `Letzter Fix · ${timeOf(fix.at)}` : 'GPS-Position ausstehend', fix && age <= 2 ? 'good' : '');
+    text('recovery-age', fix ? `Letzter gültiger Fix vor ${fmt(age)} s` : 'Kein gültiger GPS-Fix empfangen');
+    $('map-position').setAttribute('visibility', relative ? 'visible' : 'hidden');
+    $('map-empty').hidden = !!relative;
+    if (relative) {
+      const radius = Math.max(100, Math.ceil(relative.distance / 100) * 100),
+        length = Math.min(155, relative.distance / radius * 155),
+        a = relative.bearing * Math.PI / 180,
+        x = 300 + Math.sin(a) * length,
+        y = 210 - Math.cos(a) * length;
+      $('map-bearing-line').setAttribute('d', `M300 210L${x.toFixed(2)} ${y.toFixed(2)}`);
+      $('map-rocket').setAttribute('cx', x);
+      $('map-rocket').setAttribute('cy', y);
+      $('map-rocket-label').setAttribute('x', x + 10);
+      $('map-rocket-label').setAttribute('y', y - 10);
+      text('map-scale', `${fmt(radius,0)} m`);
+    }
+  }
+  async function copyPosition() {
+    if (!state.lastFix) return;
+    const value = `${state.lastFix.lat.toFixed(7)}, ${state.lastFix.lon.toFixed(7)}`;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error();
+      await navigator.clipboard.writeText(value);
+      notify('GPS-Koordinaten kopiert.');
+    } catch {
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.style.cssText = 'position:fixed;left:0;top:0;opacity:0';
+      document.body.append(area);
+      area.select();
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch {}
+      area.remove();
+      notify(copied ? 'GPS-Koordinaten kopiert.' : 'Kopieren nicht möglich. Koordinaten aus der Anzeige übernehmen.');
+    }
+  }
+  $('copy-position').addEventListener('click', copyPosition);
+  /* ---------- Screen wake lock while receiving ---------- */
+  async function updateWakeLock() {
+    if (!('wakeLock' in navigator)) {
+      wake.status = 'unsupported';
+      return;
+    }
+    if (wake.pending) return;
+    const wanted = state.connected || !!state.reconnect;
+    wake.pending = true;
+    try {
+      if (wanted && !wake.sentinel && document.visibilityState === 'visible') {
+        const sentinel = await navigator.wakeLock.request('screen');
+        wake.sentinel = sentinel;
+        wake.status = 'active';
+        sentinel.addEventListener('release', () => {
+          if (wake.sentinel === sentinel) wake.sentinel = null;
+          wake.status = state.connected || state.reconnect ? 'paused' : 'inactive';
+        });
+      } else if (!wanted && wake.sentinel) {
+        const sentinel = wake.sentinel;
+        wake.sentinel = null;
+        await sentinel.release();
+        wake.status = 'inactive';
+      } else if (!wanted) wake.status = 'inactive';
+    } catch {
+      wake.status = wanted ? 'denied' : 'inactive';
+    } finally {
+      wake.pending = false;
+    }
+    // Re-evaluate once if the connection state changed while the request was pending.
+    if ((state.connected || !!state.reconnect) !== wanted) updateWakeLock();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) updateWakeLock();
+  });
+  /* ---------- Local backup of the received recording (IndexedDB) ---------- */
+  function openBackupDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error('IndexedDB nicht verfügbar'));
+        return;
+      }
+      const request = indexedDB.open('trs-bodenstation', 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('samples')) db.createObjectStore('samples', {
+          autoIncrement: true
+        });
+        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onversionchange = () => {
+          db.close();
+          backup.db = null;
+          backup.status = 'unavailable';
+        };
+        resolve(db);
+      };
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Datenbank blockiert'));
+      setTimeout(() => {
+        if (backup.status === 'pending') backup.status = 'blocked';
+      }, 4000);
+    });
+  }
+  // Only one open station tab may write the backup; a second tab runs without it.
+  function acquireBackupLock() {
+    if (!navigator.locks) return Promise.resolve(true);
+    return new Promise(resolve => {
+      navigator.locks.request('trs-bodenstation-backup', {
+        ifAvailable: true
+      }, lock => {
+        resolve(!!lock);
+        return lock ? new Promise(() => {}) : undefined;
+      }).catch(() => resolve(true));
+    });
+  }
+  const transactionDone = tx => new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+  const requestResult = request => new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  const recordingEvents = () => state.events.filter(e => e.at >= state.recordingStartedAt);
+  async function persistTick() {
+    if (!backup.db || backup.busy || state.restorePending) return;
+    if (!state.samples.length) {
+      state.pendingPersist = [];
+      state.metaDirty = false;
+      return;
+    }
+    if (!state.pendingPersist.length && !state.metaDirty) return;
+    backup.busy = true;
+    const batch = state.pendingPersist.splice(0);
+    state.metaDirty = false;
+    try {
+      const tx = backup.db.transaction(['samples', 'meta'], 'readwrite'),
+        store = tx.objectStore('samples');
+      for (const sample of batch) store.add(sample);
+      const meta = {
+        flightKey: state.flightKey,
+        recordingStartedAt: state.recordingStartedAt,
+        events: recordingEvents(),
+        landed: state.landed,
+        bufferFull: state.bufferFull,
+        exportedCount: state.exportedCount,
+        count: state.samples.length,
+        protocol: state.lastProtocol,
+        savedAt: Date.now()
+      };
+      tx.objectStore('meta').put(meta, 'current');
+      await transactionDone(tx);
+      backup.status = 'ok';
+      backup.savedAt = meta.savedAt;
+    } catch {
+      state.pendingPersist.unshift(...batch);
+      state.metaDirty = true;
+      backup.status = 'error';
+    } finally {
+      backup.busy = false;
+    }
+  }
+  async function clearBackup() {
+    state.pendingPersist = [];
+    state.metaDirty = false;
+    backup.savedAt = null;
+    if (!backup.db) return;
+    try {
+      const tx = backup.db.transaction(['samples', 'meta'], 'readwrite');
+      tx.objectStore('samples').clear();
+      tx.objectStore('meta').clear();
+      await transactionDone(tx);
+      backup.status = 'ok';
+    } catch {
+      backup.status = 'error';
+    }
+  }
+  async function initBackup() {
+    if (!await acquireBackupLock()) {
+      backup.status = 'other-tab';
+      return;
+    }
+    try {
+      backup.db = await openBackupDb();
+      backup.status = 'ok';
+    } catch {
+      backup.status = 'unavailable';
+      return;
+    }
+    try {
+      const meta = await requestResult(backup.db.transaction('meta').objectStore('meta').get('current'));
+      if (!meta || !meta.count) return;
+      state.restorePending = true;
+      text('restore-key', String(meta.flightKey ?? '—').replace('/', ' / '));
+      text('restore-count', fmt(meta.count, 0));
+      text('restore-saved', new Date(meta.savedAt).toLocaleString('de-DE'));
+      const exported = meta.exportedCount >= meta.count;
+      text('restore-exported', exported ? 'EXPORTIERT' : meta.exportedCount ? `TEILWEISE (${fmt(meta.exportedCount,0)})` : 'NICHT EXPORTIERT');
+      $('restore-dialog').dataset.exported = String(exported);
+      $('restore-dialog').showModal();
+    } catch {
+      backup.status = 'error';
+    }
+  }
+  async function restoreRecording() {
+    const tx = backup.db.transaction(['samples', 'meta']);
+    const [samples, meta] = await Promise.all([requestResult(tx.objectStore('samples').getAll()), requestResult(tx.objectStore('meta').get('current'))]);
+    if (!meta || !samples.length) throw new Error('Sicherung leer');
+    state.samples = samples;
+    state.max = {
+      height: 0,
+      velocity: 0,
+      g: 0
+    };
+    for (const s of samples) {
+      state.max.height = Math.max(state.max.height, s.altitude_m);
+      state.max.velocity = Math.max(state.max.velocity, Math.abs(s.velocity_m_s));
+      state.max.g = Math.max(state.max.g, Math.abs(s.acceleration_g));
+    }
+    Object.assign(state, {
+      flightKey: meta.flightKey,
+      recordingStartedAt: meta.recordingStartedAt,
+      landed: !!meta.landed,
+      bufferFull: !!meta.bufferFull,
+      exportedCount: Math.min(meta.exportedCount || 0, samples.length),
+      restored: true,
+      pendingPersist: [],
+      restorePending: false,
+      lastProtocol: meta.protocol ?? null,
+      fixHistory: []
+    });
+    for (const s of samples)
+      if (s.gps_fix === 3 && s.lat !== null && s.lon !== null) noteFix(s, s.received_at);
+    for (const e of meta.events || []) addEvent(e.title, e.description, e.kind, e.flightT, e.at);
+    addEvent('Aufzeichnung wiederhergestellt', `${fmt(samples.length,0)} gesicherte Messwerte aus ${new Date(meta.savedAt).toLocaleString('de-DE')}.`, 'status');
+    backup.savedAt = meta.savedAt;
+    chartsDirty = true;
+    render();
+  }
+  $('restore-accept').addEventListener('click', async () => {
+    $('restore-accept').disabled = true;
+    try {
+      await restoreRecording();
+      $('restore-dialog').close();
+      notify('Aufzeichnung wiederhergestellt.');
+    } catch {
+      text('restore-message', 'Wiederherstellung nicht möglich. Die Sicherung bleibt unverändert.');
+    } finally {
+      $('restore-accept').disabled = false;
+    }
+  });
+  $('restore-discard').addEventListener('click', async () => {
+    const button = $('restore-discard');
+    if ($('restore-dialog').dataset.exported !== 'true' && button.dataset.confirm !== 'true') {
+      button.dataset.confirm = 'true';
+      button.textContent = 'Endgültig verwerfen';
+      text('restore-message', 'Diese Aufzeichnung wurde nicht vollständig exportiert. Erneut klicken, um sie zu löschen.');
+      return;
+    }
+    state.restorePending = false;
+    await clearBackup();
+    $('restore-dialog').close();
+    notify('Gesicherte Aufzeichnung verworfen.');
+  });
+  $('restore-dialog').addEventListener('cancel', event => event.preventDefault());
+  // Leaving the page with unexported data or during a flight asks for confirmation.
+  window.addEventListener('beforeunload', event => {
+    if (state.samples.length > state.exportedCount || inFlight()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
+  /* ---------- Start a new recording without reloading ---------- */
+  function startNewRecording() {
+    if (inFlight() || !state.samples.length) return;
+    invalidateApproval('Neue Aufzeichnung begonnen.');
+    Object.assign(state, {
+      closedFlightKey: state.flightKey,
+      flightKey: null,
+      lastSeq: null,
+      samples: [],
+      max: {
+        height: 0,
+        velocity: 0,
+        g: 0
+      },
+      landed: false,
+      bufferFull: false,
+      exportedCount: 0,
+      restored: false,
+      recordingStartedAt: Date.now(),
+      manual: {},
+      step: 0,
+      lastCheckKey: '',
+      lastProtocol: null,
+      fixHistory: [],
+      lastFix: null
+    });
+    clearBackup();
+    addEvent('Neue Aufzeichnung begonnen', 'Anzeige, lokale Sicherung und Startcheck zurückgesetzt.', 'status');
+    chartsDirty = true;
+    renderChecklist(true);
+    render();
+    notify('Neue Aufzeichnung bereit. Startcheck erneut durchführen.');
+  }
+
+  function openNewRecordingDialog() {
+    if (inFlight() || !state.samples.length) return;
+    const count = state.samples.length,
+      exported = state.exportedCount >= count;
+    text('new-recording-text', exported ? `Die aktuelle Aufzeichnung (${fmt(count,0)} Messwerte) wurde als CSV exportiert. Sie wird aus der Anzeige und der lokalen Sicherung entfernt; der Startcheck wird zurückgesetzt.` : `Achtung: ${fmt(count-state.exportedCount,0)} von ${fmt(count,0)} Messwerten sind noch nicht als CSV exportiert und gehen verloren. Anzeige, lokale Sicherung und Startcheck werden zurückgesetzt.`);
+    $('new-recording-export').hidden = exported;
+    text('new-recording-confirm', exported ? 'Neu beginnen' : 'Verwerfen und neu beginnen');
+    $('new-recording-dialog').showModal();
+  }
+  $('new-recording').addEventListener('click', openNewRecordingDialog);
+  $('new-recording-cancel').addEventListener('click', () => $('new-recording-dialog').close());
+  $('new-recording-export').addEventListener('click', () => {
+    exportCSV();
+    openNewRecordingDialog();
+  });
+  $('new-recording-confirm').addEventListener('click', () => {
+    $('new-recording-dialog').close();
+    startNewRecording();
+  });
+  /* ---------- Receiver diagnostics ---------- */
+  const WAKE_LABELS = {
+    active: 'AKTIV',
+    inactive: 'INAKTIV',
+    paused: 'PAUSIERT',
+    denied: 'NICHT ERLAUBT',
+    unsupported: 'NICHT UNTERSTÜTZT'
+  };
+
+  function backupLabel() {
+    return backup.status === 'pending' ? 'WIRD GEPRÜFT' : backup.status === 'blocked' ? 'BLOCKIERT' : backup.status === 'other-tab' ? 'ANDERER TAB AKTIV' : backup.status === 'unavailable' ? 'NICHT VERFÜGBAR' : backup.status === 'error' ? 'FEHLER' : backup.savedAt && state.samples.length ? `GESICHERT ${timeOf(backup.savedAt)}` : 'BEREIT';
+  }
+
+  function renderDiagnostics() {
+    const loss = lossPercent();
+    text('diag-valid', fmt(state.received, 0));
+    text('diag-rejected', fmt(state.rejected, 0));
+    text('diag-missed', fmt(state.missed, 0));
+    text('diag-loss', loss === null ? '—' : unit(loss, '%'));
+    text('diag-wake', WAKE_LABELS[wake.status]);
+    text('diag-backup', backupLabel());
+    $('diag-backup').className = ['error', 'unavailable', 'blocked', 'other-tab'].includes(backup.status) ? 'warn' : '';
+    $('diag-wake').className = wake.status === 'denied' || (wake.status === 'unsupported' && state.connected) ? 'warn' : '';
+    $('export-raw').disabled = !state.rawLog.length;
+    if (state.activeTab !== 'einstellungen' || renderedRawVersion === state.rawVersion) return;
+    renderedRawVersion = state.rawVersion;
+    const list = $('raw-log'),
+      rows = state.rawLog.slice(-DIAG.shownLines).reverse().map(entry => {
+        const row = document.createElement('div');
+        row.className = 'raw-row' + (entry.status === 'ok' ? '' : ' rejected');
+        const time = document.createElement('time');
+        time.textContent = timeOf(entry.at);
+        const status = document.createElement('span');
+        status.className = 'raw-status';
+        status.textContent = entry.status === 'ok' ? 'OK' : 'VERWORFEN';
+        const body = document.createElement('span');
+        body.className = 'raw-text';
+        const line = document.createElement('span');
+        line.className = 'raw-line';
+        line.textContent = entry.line;
+        line.title = entry.line.slice(0, 500);
+        body.append(line);
+        if (entry.reason) {
+          const reason = document.createElement('span');
+          reason.className = 'raw-reason';
+          reason.textContent = entry.reason;
+          body.append(reason);
+        }
+        row.append(time, status, body);
+        return row;
+      });
+    if (rows.length) list.replaceChildren(...rows);
+    else {
+      const empty = document.createElement('div');
+      empty.className = 'raw-empty';
+      empty.textContent = 'Noch keine Zeilen empfangen.';
+      list.replaceChildren(empty);
+    }
+  }
+
+  function saveFile(content, name, type) {
+    const blob = new Blob([content], {
+        type
+      }),
+      url = URL.createObjectURL(blob),
+      a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  $('export-raw').addEventListener('click', () => {
+    if (!state.rawLog.length) return;
+    const lines = state.rawLog.map(r => [new Date(r.at).toISOString(), r.status === 'ok' ? 'OK' : 'VERWORFEN', r.reason.replace(/[\t\r\n]/g, ' '), r.line.replace(/[\r\n]/g, ' ')].join('\t'));
+    saveFile(['# TRS Bodenstation · Rohdaten-Log (nur Empfang)', '# Zeit UTC\tStatus\tGrund\tEmpfangene Zeile', ...lines].join('\r\n'), `TRS_Rohdaten_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`, 'text/plain;charset=utf-8');
+    notify(`${fmt(state.rawLog.length,0)} Rohzeilen exportiert.`);
+  });
+  /* ---------- Field mode and fullscreen ---------- */
+  function fieldMode(on) {
+    document.documentElement.dataset.field = on ? 'on' : 'off';
+    document.querySelectorAll('[data-field-choice]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.fieldChoice === 'on') === on)));
+    try {
+      localStorage.setItem('trs-field', on ? 'on' : 'off');
+    } catch {}
+    chartsDirty = true;
+  }
+  document.querySelectorAll('[data-field-choice]').forEach(b => b.addEventListener('click', () => fieldMode(b.dataset.fieldChoice === 'on')));
+  $('fullscreen-button').disabled = !document.fullscreenEnabled;
+  $('fullscreen-button').addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      notify('Vollbild ist hier nicht verfügbar.');
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    text('fullscreen-button', document.fullscreenElement ? 'Vollbild beenden' : 'Vollbild öffnen');
+    chartsDirty = true;
+  });
+  /* ---------- Optional acoustic cues (off by default, generated locally) ---------- */
+  const sound = {
+    enabled: false,
+    ctx: null
+  };
+  const TONES = Object.freeze({
+    phase: [
+      [880, .12]
+    ],
+    pyro: [
+      [1175, .1],
+      [1175, .1]
+    ],
+    landed: [
+      [660, .14],
+      [880, .22]
+    ],
+    linkLost: [
+      [440, .25],
+      [330, .25],
+      [440, .25]
+    ],
+    linkBack: [
+      [660, .08],
+      [990, .12]
+    ]
+  });
+
+  function audioContext() {
+    if (!sound.ctx) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      if (!Context) return null;
+      sound.ctx = new Context();
+    }
+    if (sound.ctx.state === 'suspended') sound.ctx.resume().catch(() => {});
+    return sound.ctx;
+  }
+
+  function tone(pattern, force = false) {
+    if (!sound.enabled && !force) return;
+    const ctx = audioContext();
+    if (!ctx) return;
+    let t = ctx.currentTime + .03;
+    for (const [frequency, duration] of pattern) {
+      const osc = ctx.createOscillator(),
+        gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(.0001, t);
+      gain.gain.exponentialRampToValueAtTime(.22, t + .012);
+      gain.gain.exponentialRampToValueAtTime(.0001, t + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + duration + .02);
+      t += duration + .08;
+    }
+  }
+
+  function soundMode(on) {
+    sound.enabled = on;
+    document.querySelectorAll('[data-sound-choice]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.soundChoice === 'on') === on)));
+    try {
+      localStorage.setItem('trs-sound', on ? 'on' : 'off');
+    } catch {}
+  }
+  document.querySelectorAll('[data-sound-choice]').forEach(b => b.addEventListener('click', () => {
+    soundMode(b.dataset.soundChoice === 'on');
+    if (sound.enabled) tone(TONES.phase);
+  }));
+  $('sound-test').addEventListener('click', () => tone(TONES.linkLost, true));
+  // Browsers only start audio after a user gesture; resume the context on the first interaction.
+  document.addEventListener('pointerdown', () => {
+    if (sound.enabled) audioContext();
+  }, {
+    capture: true
+  });
+  /* ---------- Link-loss banner during an active flight phase ---------- */
+  const FLIGHT_PHASES = ['boost', 'coast', 'apogee', 'descent'];
+
+  function renderLinkBanner() {
+    const p = state.packet,
+      lost = !!p && !fresh() && FLIGHT_PHASES.includes(p.phase);
+    if (lost && !state.bannerShown) {
+      state.bannerShown = true;
+      tone(TONES.linkLost);
+    } else if (!lost && state.bannerShown) {
+      state.bannerShown = false;
+      if (fresh()) tone(TONES.linkBack);
+    }
+    const visible = lost && state.bannerDismissedFor !== state.lastAt;
+    $('link-banner').hidden = !visible;
+    if (!visible) return;
+    const now = Date.now(),
+      fixAge = state.lastFix ? (now - state.lastFix.at) / 1000 : null;
+    text('link-banner-detail', `Letztes Paket vor ${fmt((now-state.lastAt)/1000)} s · ${PHASES[p.phase]} · ${fmt(p.altitude_m,0)} m${fixAge===null?'':` · letzter GPS-Fix vor ${fmt(fixAge,0)} s`} · ${state.connected?'Empfänger verbunden, keine Daten':state.reconnect?'Empfänger wird neu verbunden':'Empfänger getrennt'}`);
+  }
+  $('link-banner-hide').addEventListener('click', () => {
+    state.bannerDismissedFor = state.lastAt;
+    $('link-banner').hidden = true;
+  });
+  /* ---------- Start check protocol (local documentation only) ---------- */
+  function buildProtocol(at) {
+    const p = state.packet;
+    return {
+      at,
+      device: p.device_id,
+      flight: p.flight_id,
+      profile: p.profile_id,
+      fw: p.fw_version,
+      auto: automaticChecks().map(c => ({
+        name: c.name,
+        pass: c.pass
+      })),
+      manual: manualItems.map(([id, title]) => ({
+        title,
+        at: state.manual[id] ?? null
+      })),
+      values: {
+        battery: p.battery_v,
+        satellites: p.satellites,
+        hdop: p.hdop,
+        rssi: p.rssi_dbm,
+        snr: p.snr_db,
+        flash: p.flash_free_pct,
+        logging: p.logging_hz,
+        frequency: p.frequency_mhz,
+        main: p.main_switch,
+        armed: p.armed_switch,
+        pyro1: p.pyro1_continuity,
+        pyro2: p.pyro2_continuity
+      }
+    };
+  }
+
+  function protocolText(pr) {
+    const date = at => new Date(at).toLocaleString('de-DE'),
+      v = pr.values,
+      yes = b => b === true ? 'JA' : b === false ? 'NEIN' : 'UNBEKANNT';
+    return ['TRS BODENSTATION · STARTCHECK-PROTOKOLL', '',
+      `Abgeschlossen      ${date(pr.at)}`, `Flugcomputer       ${pr.device}`, `Flugkennung        ${pr.flight}`, `Firmwareprofil     ${pr.profile??'—'} (Soll: ${FIRMWARE_PROFILE.id})`, `Firmware-Version   ${pr.fw??'—'}`,
+      `Sollprofil         Pyro 1: Apogäum + ${FIRMWARE_PROFILE.apogeeDelayMs} ms · Pyro 2: ${FIRMWARE_PROFILE.pyro2HeightM} m im Abstieg`, '',
+      'AUTOMATISCHE BEFUNDE (Telemetrie zum Zeitpunkt der Bestätigung)', ...pr.auto.map((c, i) => `  ${String(i+1).padStart(2,'0')}  ${c.name.padEnd(36)} ${c.pass?'ERFÜLLT':'OFFEN'}`), '',
+      'MESSWERTE', `  Akku ${unit(v.battery,'V',2)} · Log-Flash ${unit(v.flash,'% frei')} · Logging ${unit(v.logging,'Hz',0)}`, `  GPS ${fmt(v.satellites,0)} Satelliten · HDOP ${fmt(v.hdop)}`,
+      `  Funk ${unit(v.frequency,'MHz',3)} · RSSI ${unit(v.rssi,'dBm',0)} · SNR ${unit(v.snr,'dB')}`, `  Hauptschalter ${switchLabel(v.main)} · Scharfschalter ${switchLabel(v.armed,true)}`, `  Durchgang Pyro 1 ${yes(v.pyro1)} · Pyro 2 ${yes(v.pyro2)}`, '',
+      'MANUELLE BEFUNDE', ...pr.manual.map(m => `  ${m.title.padEnd(36)} ${m.at?'bestätigt '+timeOf(m.at):'OFFEN'}`), '',
+      'Lokale Dokumentation der Bodenstation. Die Bestätigung steuert keine Hardware;', 'Scharfschalten und Auslösen erfolgen ausschließlich über den Flugcomputer.'
+    ].join('\n');
+  }
+
+  function saveProtocol() {
+    const pr = state.lastProtocol;
+    if (!pr) return;
+    saveFile('﻿' + protocolText(pr).replace(/\n/g, '\r\n'), `TRS_Startcheck_${pr.flight.replace(/[^a-zA-Z0-9_-]/g,'_')}_${new Date(pr.at).toISOString().slice(0,10)}.txt`, 'text/plain;charset=utf-8');
+    notify('Prüfprotokoll gespeichert.');
+  }
+
+  function printProtocol() {
+    const pr = state.lastProtocol;
+    if (!pr) return;
+    text('print-protocol', protocolText(pr));
+    window.print();
+  }
+
+  function renderProtocolActions(container) {
+    const pr = state.lastProtocol;
+    if (!pr) return;
+    const box = document.createElement('div');
+    box.className = 'protocol-actions';
+    const label = document.createElement('span');
+    label.textContent = `Prüfprotokoll · ${timeOf(pr.at)} · ${pr.device} / ${pr.flight}`;
+    const actions = document.createElement('div');
+    for (const [title, handler, symbol] of [
+        ['Speichern', saveProtocol, 'export'],
+        ['Drucken', printProtocol, null]
+      ]) {
+      const b = document.createElement('button');
+      b.className = 'quiet small-button';
+      b.innerHTML = (symbol ? icon(symbol) : '') + title;
+      b.addEventListener('click', handler);
+      actions.append(b);
+    }
+    box.append(label, actions);
+    container.append(box);
+  }
+  /* ---------- Recovery: GPS history and external map link ---------- */
+  function noteFix(p, at) {
+    const fix = {
+      lat: p.lat,
+      lon: p.lon,
+      at,
+      alt: p.altitude_m,
+      sats: p.satellites,
+      hdop: p.hdop
+    };
+    state.lastFix = fix;
+    const last = state.fixHistory.at(-1);
+    if (!last || at - last.at >= 5000 || relativePosition(last, fix).distance > 2) {
+      state.fixHistory.push(fix);
+      if (state.fixHistory.length > 200) state.fixHistory.shift();
+    }
+  }
+
+  function ageLabel(seconds) {
+    return seconds < 120 ? `${fmt(seconds,0)} s` : seconds < 7200 ? `${fmt(Math.floor(seconds/60),0)} min` : `${fmt(Math.floor(seconds/3600),0)} h`;
+  }
+
+  function renderFixHistory() {
+    $('open-map').disabled = !state.lastFix;
+    const all = state.fixHistory;
+    text('fix-count', `${fmt(all.length,0)} ${all.length===1?'Fix':'Fixes'}`);
+    const body = $('fix-body'),
+      now = Date.now();
+    if (!all.length) {
+      if (!body.querySelector('.empty')) body.innerHTML = '<tr><td class="empty" colspan="7">Noch kein 3D-Fix empfangen.</td></tr>';
+      return;
+    }
+    body.replaceChildren(...all.slice(-10).reverse().map(f => {
+      const tr = document.createElement('tr');
+      for (const [value, cls] of [
+          [timeOf(f.at), 'opt'],
+          [ageLabel((now - f.at) / 1000)],
+          [`${fmt(f.lat,6)}°`],
+          [`${fmt(f.lon,6)}°`],
+          [unit(f.alt, 'm', 0), 'opt'],
+          [`${fmt(f.sats,0)} / ${fmt(f.hdop)}`, 'opt'],
+          [state.base ? unit(relativePosition(state.base, f).distance, 'm', 0) : '—']
+        ]) {
+        const td = document.createElement('td');
+        td.textContent = value;
+        if (cls) td.className = cls;
+        tr.append(td);
+      }
+      return tr;
+    }));
+  }
+  $('open-map').addEventListener('click', () => {
+    const f = state.lastFix;
+    if (!f) return;
+    const lat = f.lat.toFixed(6),
+      lon = f.lon.toFixed(6);
+    window.open(`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`, '_blank', 'noopener');
+  });
+  /* ---------- Chart gap threshold from the actual packet rate ---------- */
+  let gapCache = {
+    count: -1,
+    value: 1
+  };
+  // A gap is drawn when the interval exceeds max(1 s, 4 × median interval); sampled for large recordings.
+  function gapThreshold() {
+    const s = state.samples;
+    if (gapCache.count === s.length) return gapCache.value;
+    const intervals = [],
+      stride = Math.max(1, Math.floor(s.length / 400));
+    for (let i = stride; i < s.length; i += stride) {
+      const d = s[i].flight_time_s - s[i - 1].flight_time_s;
+      if (d > 0) intervals.push(d);
+    }
+    intervals.sort((a, b) => a - b);
+    const median = intervals.length ? intervals[Math.floor(intervals.length / 2)] : 0;
+    gapCache = {
+      count: s.length,
+      value: Math.max(1, 4 * median)
+    };
+    return gapCache.value;
+  }
+  /* ---------- Keep the active tab visible in the scrollable tab strip ---------- */
+  function keepTabVisible(name) {
+    const strip = document.querySelector('.tabs'),
+      tab = strip?.querySelector(`[data-tab="${name}"]`);
+    if (!tab) return;
+    const t = tab.getBoundingClientRect(),
+      c = strip.getBoundingClientRect();
+    if (t.left < c.left) strip.scrollLeft -= c.left - t.left + 12;
+    else if (t.right > c.right) strip.scrollLeft += t.right - c.right + 12;
+  }
+
+  function render() {
+    validateApproval();
+    const p = state.packet,
+      live = fresh(),
+      old = !!p && !live,
+      age = state.lastAt === null ? null : (Date.now() - state.lastAt) / 1000;
+    text('clock', timeOf(Date.now()));
+    text('global-age', age === null ? '—' : unit(age, 's'));
+    const reconnecting = !state.connected && !!state.reconnect;
+    stateLabel('global-state', state.connected ? (live ? 'Telemetrie verbunden' : p ? 'Telemetrie veraltet' : 'Wartet auf Telemetrie') : reconnecting ? 'Verbindung verloren · Wiederverbindung' : 'Empfänger getrennt', live ? 'good' : (old && state.connected) || reconnecting ? 'bad' : '');
+    text('connect-label', state.connected ? 'Trennen' : state.connecting ? 'Verbinden …' : reconnecting ? 'Wiederverbindung abbrechen' : 'Verbinden');
+    $('connect-button').disabled = state.connecting || state.closing;
+    $('baud-rate').disabled = state.connected || state.connecting;
+    stateLabel('usb-state', state.connected ? 'Verbunden' : reconnecting ? 'Wiederverbindung' : 'Getrennt', state.connected ? 'good' : reconnecting ? 'bad' : '');
+    text('receiver-title', state.connected ? 'USB-Empfänger verbunden' : reconnecting ? 'Verbindung verloren' : 'Kein Empfänger verbunden');
+    text('receiver-description', state.connected ? `${baudLabel()} · ${live?'Datenstrom aktiv':'wartet auf Daten'}` : reconnecting ? (state.reconnect.attempts ? `Automatische Wiederverbindung · Versuch ${state.reconnect.attempts}` : 'Automatische Wiederverbindung startet …') : 'USB-Verbindung oben herstellen.');
+    text('received-count', fmt(state.received, 0));
+    text('rejected-count', fmt(state.rejected, 0));
+    text('missed-count', fmt(state.missed, 0));
+    text('sensor-loss', unit(lossPercent(), '%'));
+    text('device-badge', p ? p.device_id : 'GERÄT AUSSTEHEND');
+    const sources = [live && p.baro_ok === true, live && p.imu_ok === true, live && p.gps_fix === 3, live && p.rssi_dbm !== null, live && p.battery_v !== null, live && p.flash_free_pct !== null];
+    text('source-count', `${sources.filter(Boolean).length} / 6 Datenquellen`);
+    const sensorState = (id, known, healthy) => stateLabel(id, !p ? 'Keine Daten' : old ? 'Veraltet' : known ? (healthy ? 'OK' : 'Prüfen') : 'Unbekannt', !live ? '' : known ? (healthy ? 'good' : 'bad') : '');
+    sensorState('baro-state', p?.baro_ok != null, p?.baro_ok === true);
+    sensorState('imu-state', p?.imu_ok != null, p?.imu_ok === true);
+    sensorState('gps-state', p?.gps_fix != null, p?.gps_fix === 3);
+    sensorState('lora-state', p?.rssi_dbm != null, true);
+    sensorState('power-state', p?.battery_v != null, p?.battery_v >= LIMITS.batteryMinV);
+    sensorState('flash-state', p?.flash_free_pct != null, p?.flash_free_pct >= LIMITS.flashMinPct);
+    text('sensor-height', fmt(p?.altitude_m));
+    text('sensor-pressure', unit(p?.pressure_hpa, 'hPa'));
+    text('sensor-g', fmt(p?.acceleration_g));
+    text('sensor-axes', `X ${fmt(p?.accel_x_g)} / Y ${fmt(p?.accel_y_g)} / Z ${fmt(p?.accel_z_g)} g`);
+    const hasFix = p?.gps_fix === 2 || p?.gps_fix === 3;
+    text('sensor-fix', hasFix ? `${p.gps_fix}D-Fix` : '—');
+    $('sensor-fix-value').classList.toggle('text-value', hasFix);
+    text('sensor-fix-detail', !p || p.gps_fix === null ? 'Fix ausstehend' : 'Kein GPS-Fix');
+    $('sensor-fix-detail').hidden = hasFix;
+    text('sensor-satellites', fmt(p?.satellites, 0));
+    text('sensor-hdop', fmt(p?.hdop));
+    text('sensor-rssi', fmt(p?.rssi_dbm, 0));
+    text('sensor-snr', unit(p?.snr_db, 'dB'));
+    const rate = live ? state.rxTimes.filter(t => Date.now() - t < 2000).length / 2 : null;
+    text('sensor-rate', unit(rate, 'Hz'));
+    text('sensor-battery', fmt(p?.battery_v, 2));
+    text('sensor-main', switchLabel(p?.main_switch));
+    text('sensor-flash', fmt(p?.flash_free_pct));
+    text('sensor-logging', unit(p?.logging_hz, 'Hz', 0));
+    text('sensor-freshness', !p ? 'Wartet auf gültige Telemetrie' : live ? 'Gültiger Datenstrom · Messwerte aktuell' : 'Letzte empfangene Werte · Daten nicht aktuell');
+    // Stale switch and continuity states stay visible for reference, but are muted and labelled as outdated.
+    text('hardware-badge', old ? 'VERALTET' : 'NUR ANZEIGE');
+    $('hardware-badge').className = 'badge' + (old ? ' warn' : '');
+    for (const [id, value, armed] of [
+        ['hardware-main', p?.main_switch, false],
+        ['hardware-arm', p?.armed_switch, true]
+      ]) {
+      text(id, switchLabel(value, armed));
+      $(id).className = old ? 'muted' : live && value === true ? (armed ? 'warn' : 'ok') : '';
+    }
+    for (const n of [1, 2]) {
+      const v = p?.[`pyro${n}_continuity`],
+        fired = p?.[`pyro${n}_fired`] === true;
+      text(`hardware-pyro${n}`, `${fired?'AUSGELÖST / ':''}${v===true?'JA':v===false?'NEIN':'UNBEKANNT'}`);
+      $(`hardware-pyro${n}`).className = old ? 'muted' : live ? (fired || v === false ? 'warn' : v === true ? 'ok' : '') : '';
+    }
+    const matched = profileMatches(p);
+    text('profile-status', (!p ? 'FIRMWARE-ABGLEICH AUSSTEHEND' : old ? 'FIRMWAREDATEN VERALTET' : matched ? 'FIRMWAREPROFIL IDENTISCH' : 'FIRMWAREPROFIL NICHT BESTÄTIGT') + (p?.fw_version ? ` · FW ${p.fw_version}` : ''));
+    $('profile-status').className = 'profile-line' + (live && matched ? ' ok' : '');
+    text('firmware-match-note', !p ? 'Firmware-Abgleich ausstehend. Die Werte hier sind das Sollprofil der Bodenstation; die tatsächliche Auslöselogik muss fest in der Flugcomputer-Firmware implementiert sein.' : live && matched ? 'Empfangenes Firmwareprofil stimmt mit dem festen Sollprofil überein.' : 'Das empfangene Profil ist nicht aktuell oder stimmt nicht mit dem Sollprofil überein. Startfreigabe gesperrt.');
+    text('overview-readiness', state.approved ? 'Startbereit' : inFlight() ? 'Flug läuft' : 'Startfreigabe offen');
+    $('overview-readiness').className = state.approved ? 'ok' : '';
+    text('overview-readiness-sub', state.approved ? 'Alle Prüfungen erfüllt.' : canApprove() ? 'Abschlussbestätigung ausstehend.' : 'Startcheck noch nicht abgeschlossen.');
+    text('flight-description', p ? `${p.device_id} / Flug ${p.flight_id} · ${PHASES[p.phase]}${old?' · Daten nicht aktuell':''}` : 'Wartet auf einen Flugcomputer.');
+    text('flight-time', p ? flightTime(p.flight_time_s) : 'T+—:—');
+    text('flight-height', fmt(p?.altitude_m));
+    text('flight-velocity', fmt(p?.velocity_m_s));
+    text('flight-g', fmt(p?.acceleration_g));
+    const count = state.samples.length;
+    for (const [key, u] of [
+        ['height', 'm'],
+        ['velocity', 'm/s'],
+        ['g', 'g']
+      ]) text('flight-max-' + key, `MAX ${count?fmt(state.max[key]):'—'} ${u}`);
+    document.querySelectorAll('.phase').forEach((el, i) => {
+      const phase = p ? phaseKeys.indexOf(p.phase) : -1;
+      el.classList.toggle('active', i === phase);
+      el.classList.toggle('done', i < phase);
+      const marker = el.querySelector('.phase-number');
+      if (marker) marker.textContent = i < phase ? '✓' : String(i + 1).padStart(2, '0');
+      el.setAttribute('aria-label', `${PHASES[phaseKeys[i]]}: ${i<phase?'erledigt':i===phase?'aktuell':'ausstehend'}`);
+      if (i === phase) el.setAttribute('aria-current', 'step');
+      else el.removeAttribute('aria-current');
+    });
+    text('flight-sample-count', `${fmt(count,0)} empfangene Flugmesswerte`);
+    stateLabel('flight-record-state', state.bufferFull ? 'Speichergrenze erreicht' : state.landed ? 'Aufzeichnung beendet' : count ? 'Aufzeichnung läuft' : 'Keine Aufzeichnung', count ? 'live' : '');
+    document.querySelectorAll('[data-export]').forEach(b => b.disabled = !count);
+    const last = state.samples.at(-1),
+      first = state.samples[0];
+    for (const [id, value, u] of [
+        ['summary-height', count ? state.max.height : null, 'm'],
+        ['summary-velocity', count ? state.max.velocity : null, 'm/s'],
+        ['summary-g', count ? state.max.g : null, 'g'],
+        ['summary-duration', last?.flight_time_s, 's']
+      ]) $(id).innerHTML = `${fmt(value)}<small class="unit">${u}</small>`;
+    text('analysis-description', (state.restored && count ? 'Wiederhergestellt · ' : '') + (state.bufferFull ? 'Speichergrenze erreicht · Aufzeichnung unvollständig.' : state.landed ? 'Flug abgeschlossen · empfangene Daten auswerten.' : count ? (state.restored && !inFlight() ? 'Aufzeichnung ohne empfangene Landung.' : 'Flug läuft · Zwischenstand der empfangenen Daten.') : 'Noch kein Flug aufgezeichnet.'));
+    text('analysis-backup', count ? `${backup.status==='ok'&&backup.savedAt?'LOKAL':backup.status==='pending'?'…':backup.status==='other-tab'?'ANDERER TAB':'AUS'} / ${state.exportedCount>=count?'EXPORTIERT':'OFFEN'}` : '— / —');
+    $('analysis-backup').className = count && backup.status !== 'ok' ? 'warn' : '';
+    $('new-recording').disabled = !count || inFlight();
+    text('analysis-record-count', `${fmt(count,0)} Messwerte`);
+    text('analysis-flight-id', first?.flight_id ?? '—');
+    text('analysis-device-id', first?.device_id ?? '—');
+    text('analysis-first', first ? timeOf(first.received_at) : '—');
+    text('analysis-last', last ? timeOf(last.received_at) : '—');
+    text('analysis-samples', fmt(count, 0));
+    text('analysis-status', state.bufferFull ? 'UNVOLLSTÄNDIG' : state.landed ? 'ABGESCHLOSSEN' : count ? 'LÄUFT' : 'AUSSTEHEND');
+    text('analysis-pyros', count ? `${state.samples.some(s=>s.pyro1_fired)?'JA':'—'} / ${state.samples.some(s=>s.pyro2_fired)?'JA':'—'}` : '— / —');
+    text('analysis-chart-status', count ? `${fmt(count,0)} Flugmesswerte · ${state.landed?'Landung empfangen':'Aufzeichnung läuft'}` : 'Wartet auf Flugaufzeichnung');
+    text('setting-frequency', p?.frequency_mhz == null ? 'Aus Telemetrie' : unit(p.frequency_mhz, 'MHz', 3));
+    text('setting-logging', p?.logging_hz == null ? 'Aus Telemetrie' : unit(p.logging_hz, 'Hz', 0));
+    renderChecklist();
+    renderDiagnostics();
+    renderLinkBanner();
+    text('fw-version', p?.fw_version ?? '—');
+    if (state.activeTab === 'bergung') {
+      renderRecovery();
+      renderFixHistory();
+    }
+  }
+  // Round 1/2/5 divisions for both axes; the time axis always contains the latest real sample.
+  function niceStep(rawStep) {
+    const magnitude = 10 ** Math.floor(Math.log10(rawStep)),
+      scaled = rawStep / magnitude;
+    return (scaled < 1.5 ? 1 : scaled < 3 ? 2 : scaled < 7 ? 5 : 10) * magnitude;
+  }
+
+  function timeAxis(duration) {
+    const end = Math.max(15, Number.isFinite(duration) ? duration : 0),
+      step = niceStep(end / 4);
+    const count = Math.ceil(end / step);
+    return {
+      max: count * step,
+      step,
+      ticks: Array.from({
+        length: count + 1
+      }, (_, i) => i * step)
+    };
+  }
+
+  function drawChart(id, key, unitName, defaultMin, defaultMax) {
+    const canvas = $(id),
+      rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2),
+      w = rect.width,
+      h = rect.height;
+    const pixelW = Math.round(w * dpr),
+      pixelH = Math.round(h * dpr);
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+      canvas.width = pixelW;
+      canvas.height = pixelH;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const style = getComputedStyle(document.documentElement),
+      color = name => style.getPropertyValue(name).trim();
+    const left = 42,
+      right = 14,
+      top = 12,
+      bottom = 22,
+      pw = w - left - right,
+      ph = h - top - bottom;
+    if (pw <= 0 || ph <= 0) return;
+    const samples = state.samples,
+      last = samples.at(-1),
+      axis = timeAxis(last?.flight_time_s ?? 0);
+    const legend = $(id === 'chart-analysis' ? 'analysis-gap-legend' : 'flight-gap-legend');
+    const gaps = [],
+      gapLimit = gapThreshold(),
+      field = document.documentElement.dataset.field === 'on';
+    let lo = defaultMin,
+      hi = defaultMax;
+    for (let i = 0; i < samples.length; i++) {
+      const p = samples[i];
+      lo = Math.min(lo, p[key]);
+      hi = Math.max(hi, p[key]);
+      if (i > 0 && p.flight_time_s - samples[i - 1].flight_time_s > gapLimit) gaps.push([samples[i - 1], p]);
+    }
+    legend.hidden = gaps.length === 0;
+    text(legend.id, `Gestrichelt: Datenlücke > ${fmt(gapLimit)} s`);
+    const axisStep = unitName === 'g' ? 4 : 100;
+    if (hi > defaultMax) hi = Math.ceil(hi / axisStep) * axisStep;
+    if (lo < defaultMin) lo = Math.floor(lo / axisStep) * axisStep;
+    const x = t => left + t / axis.max * pw,
+      y = v => top + (hi - v) / (hi - lo) * ph;
+    ctx.font = (field ? '11px ' : '9px ') + color('--mono');
+    ctx.lineWidth = .75;
+    ctx.textBaseline = 'middle';
+    ctx.setLineDash([]);
+    let ticks;
+    if (lo === defaultMin && hi === defaultMax) ticks = key === 'velocity_m_s' ? [0, 100, 200] : key === 'acceleration_g' ? [0, 12, 24] : [0, 600, 1200];
+    else {
+      const step = niceStep((hi - lo) / 3);
+      ticks = [];
+      for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) ticks.push(Math.round(v / step) * step);
+    }
+    const tickDigits = ticks.every(v => Number.isInteger(v)) ? 0 : 1;
+    for (const value of ticks) {
+      const yy = y(value);
+      ctx.strokeStyle = color('--grid');
+      ctx.beginPath();
+      ctx.moveTo(left, yy);
+      ctx.lineTo(w - right, yy);
+      ctx.stroke();
+      ctx.fillStyle = color('--muted');
+      ctx.textAlign = 'right';
+      ctx.fillText(fmt(value, tickDigits), left - 8, yy);
+    }
+    for (const tick of axis.ticks) {
+      const xx = x(tick);
+      ctx.strokeStyle = color('--grid');
+      ctx.beginPath();
+      ctx.moveTo(xx, top);
+      ctx.lineTo(xx, h - bottom);
+      ctx.stroke();
+      ctx.textAlign = tick === 0 ? 'left' : tick === axis.max ? 'right' : 'center';
+      ctx.fillStyle = color('--muted');
+      ctx.fillText(fmt(tick, 0), xx, h - 8);
+    }
+    // Empty charts contain only axes and grid, never dummy marks or placeholders.
+    if (!samples.length) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, pw, ph);
+    ctx.clip();
+    const traceColor = color(key === 'altitude_m' ? '--accent' : '--muted');
+    ctx.strokeStyle = traceColor;
+    ctx.lineWidth = field ? 2.2 : 1.4;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    let previous = null;
+    for (const p of samples) {
+      if (!previous || p.flight_time_s - previous.flight_time_s > gapLimit) ctx.moveTo(x(p.flight_time_s), y(p[key]));
+      else ctx.lineTo(x(p.flight_time_s), y(p[key]));
+      previous = p;
+    }
+    ctx.stroke();
+    // Dashed links indicate missing measurements; no extra samples are created.
+    ctx.strokeStyle = color('--muted');
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    for (const [before, after] of gaps) {
+      ctx.moveTo(x(before.flight_time_s), y(before[key]));
+      ctx.lineTo(x(after.flight_time_s), y(after[key]));
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = traceColor;
+    ctx.beginPath();
+    ctx.arc(x(last.flight_time_s), y(last[key]), 2.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCharts() {
+    if (state.activeTab === 'flug') {
+      drawChart('chart-height', 'altitude_m', 'm', 0, 1200);
+      drawChart('chart-velocity', 'velocity_m_s', 'm/s', -30, 240);
+      drawChart('chart-g', 'acceleration_g', 'g', -4, 28);
+    } else if (state.activeTab === 'auswertung') drawChart('chart-analysis', 'altitude_m', 'm', 0, 1200);
+    chartsDirty = false;
+  }
+
+  function exportCSV() {
+    if (!state.samples.length) return;
+    const keys = ['received_at', 'device_id', 'flight_id', 'seq', 'flight_time_s', 'phase', 'altitude_m', 'velocity_m_s', 'acceleration_g', ...Object.keys(OPTIONAL_FIELDS), ...BOOLEAN_FIELDS, 'profile_id', 'fw_version'];
+    const escape = value => {
+      if (value === null || value === undefined) return '';
+      let v = typeof value === 'number' ? String(value).replace('.', ',') : typeof value === 'boolean' ? (value ? 'ja' : 'nein') : String(value);
+      if (typeof value === 'string' && /^[=+@\-\t]/.test(v)) v = "'" + v;
+      return /[;"\r\n]/.test(v) ? '"' + v.replaceAll('"', '""') + '"' : v;
+    };
+    const header = ['empfang_utc', 'geraet', 'flugkennung', 'sequenz', 'flugzeit_s', 'flugphase', 'hoehe_m', 'geschwindigkeit_m_s', 'beschleunigung_vertikal_g', 'druck_hpa', 'beschleunigung_x_g', 'beschleunigung_y_g', 'beschleunigung_z_g', 'akku_v', 'satelliten', 'gps_fix', 'hdop', 'gps_breite_grad', 'gps_laenge_grad', 'rssi_dbm', 'snr_db', 'flash_frei_prozent', 'logging_hz', 'frequenz_mhz', 'pyro2_hoehe_m', 'apogaeum_verzoegerung_ms', 'barometer_ok', 'imu_ok', 'hauptschalter', 'scharfschalter', 'pyro1_durchgang', 'pyro2_durchgang', 'pyro1_ausgeloest', 'pyro2_ausgeloest', 'firmwareprofil', 'firmware_version', 'ereignisse'];
+    let previous = -Infinity;
+    const flightEvents = recordingEvents();
+    const rows = state.samples.map(p => {
+      const values = keys.map(k => k === 'received_at' ? new Date(p[k]).toISOString() : k === 'phase' ? PHASES[p[k]] : p[k]);
+      values.push(flightEvents.filter(e => e.flightT !== null && e.flightT > previous && e.flightT <= p.flight_time_s).map(e => e.title).join(' | '));
+      previous = p.flight_time_s;
+      return values.map(escape).join(';');
+    });
+    saveFile('\uFEFF' + [header.join(';'), ...rows].join('\r\n'), `TRS_Flug_${state.samples[0].flight_id.replace(/[^a-zA-Z0-9_-]/g,'_')}_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
+    state.exportedCount = state.samples.length;
+    state.metaDirty = true;
+    notify(`${fmt(state.samples.length,0)} empfangene Messwerte exportiert.`);
+  }
+  document.querySelectorAll('[data-export]').forEach(b => b.addEventListener('click', exportCSV));
+  $('phase-track').innerHTML = phaseKeys.map((phase, i) => `<li class="phase"><span class="phase-number" aria-hidden="true">${String(i+1).padStart(2,'0')}</span><span class="phase-label">${PHASES[phase]}</span></li>`).join('');
+  text('fixed-profile-id', FIRMWARE_PROFILE.id);
+  $('fixed-apogee-delay').innerHTML = `${FIRMWARE_PROFILE.apogeeDelayMs}<small class="unit">ms</small>`;
+  $('fixed-pyro2-height').innerHTML = `${FIRMWARE_PROFILE.pyro2HeightM}<small class="unit">m</small>`;
+  text('protocol-preview', JSON.stringify({
+    type: 'telemetry',
+    protocol: 1,
+    integrity_ok: true,
+    device_id: 'Kennung des Flugcomputers',
+    flight_id: 'Kennung des Flugs',
+    seq: 'uint32',
+    flight_time_s: 'Sekunden',
+    phase: 'ready | boost | coast | apogee | descent | landed',
+    altitude_m: 'Meter über Start',
+    velocity_m_s: 'Meter pro Sekunde',
+    acceleration_g: 'Vertikal, ohne Erdbeschleunigung',
+    weitere_felder: [...Object.keys(OPTIONAL_FIELDS), ...BOOLEAN_FIELDS, 'profile_id', 'fw_version']
+  }, null, 2));
+  try {
+    fieldMode(localStorage.getItem('trs-field') === 'on');
+    soundMode(localStorage.getItem('trs-sound') === 'on');
+  } catch {
+    fieldMode(false);
+  }
+  try {
+    theme(localStorage.getItem('trs-theme') === 'dark' ? 'dark' : 'light');
+    const baud = localStorage.getItem('trs-baud');
+    if (['115200', '57600', '230400'].includes(baud)) $('baud-rate').value = baud;
+  } catch {
+    theme('light');
+  }
+  readBase();
+  if (state.base) {
+    $('base-lat').value = formatCoordinate(state.base.lat);
+    $('base-lon').value = formatCoordinate(state.base.lon);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelHold();
+  });
+  window.addEventListener('blur', cancelHold);
+  new ResizeObserver(() => {
+    chartsDirty = true;
+  }).observe(document.querySelector('.workspace'));
+  setInterval(() => {
+    render();
+    if (chartsDirty && performance.now() - lastChartTime > 100) {
+      drawCharts();
+      lastChartTime = performance.now();
+    }
+  }, 200);
+  setInterval(persistTick, 1000);
+  updateWakeLock();
+  initBackup();
+  selectTab(tabNames.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'systeme');
+  renderRecovery();
+  render();
+})();
+</script></body></html>

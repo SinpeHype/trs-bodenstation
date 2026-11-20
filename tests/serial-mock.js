@@ -87,7 +87,8 @@
     let n = 0;
     const tMs = () => Math.round(420000 + performance.now() - start);
     const send = obj => window.__push(Object.assign({ v: 1, t_ms: tMs() }, obj));
-    const info = anlass => send({ typ: 'info', anlass, programm: 't13_live', firmware: 'Testseite', chip_id: 'TEST000000000000',
+    let gyroAuto = 'wartet auf Stillstand';
+    const info = anlass => send({ typ: 'info', anlass, kalib_gyro_auto: gyroAuto, programm: 't13_live', firmware: 'Testseite', chip_id: 'TEST000000000000',
       rom_version: 4, imu_ok: true, imu_who_am_i: 108, baro_ok: true, baro_crc_ok: true, flash_ok: true, flash_jedec: 'EF 40 18',
       lora_ok: true, lora_status: 34, lora_fehler: 0, lora_modus: 'nur Status, sendet nie', achsen: '+X Spitze', welt: 'Z oben',
       kalib_gyro_x: 0.078, kalib_gyro_y: -0.255, kalib_gyro_z: 0.136, kalib_p0_hpa: 995.79, kalib_vbat_faktor: 1.0 });
@@ -109,6 +110,7 @@
       if (n % 13 === 0) send({ typ: 'analog', vbat_v: 0.01, akku_erkannt: false, pyro1_v: 0.14, pyro2_v: 0.13, pyro1_verhaeltnis: null, pyro2_verhaeltnis: null });
       if (n % 25 === 0) send({ typ: 'gps', fix: true, fix_qualitaet: 1, satelliten: 8, sichtbar: 11, hdop: 1.0, breite: null, laenge: null,
         hoehe_m: 104.4, utc: '231337.000', datum: '201126', saetze_ok: 3355 + n, pruefsummenfehler: 0, bytes: 200269 + n * 80 });
+      if (n === 50) { gyroAuto = 'automatisch beim Start'; info('gyro_auto'); }
       if (n % 250 === 0) info('regelmaessig');
       if (t > seconds) clearInterval(timer);
     }, 40);

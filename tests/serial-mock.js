@@ -18,7 +18,8 @@
       isOpen = true;
       port.readable = new ReadableStream({ start(c) { controller = c; } });
     },
-    async close() { isOpen = false; port.readable = null; }
+    async close() { isOpen = false; port.readable = null; },
+    async setSignals(signals) { window.__signals = Object.assign(window.__signals || {}, signals); }
   };
 
   const serial = new EventTarget();
@@ -74,5 +75,43 @@
     }
     if (send) packets.forEach(p => window.__push(p));
     return packets;
+  };
+
+  /**
+   * Testdaten im Format von t13_live (Flugcomputer direkt am USB, Protokoll v1).
+   * Sendet in Echtzeit: imu 25/s mit langsam drehender Lage, baro 10/s, analog 2/s,
+   * gps 1/s (ohne Koordinaten), info beim Start und alle 10 s. Rückgabe: Stoppfunktion.
+   */
+  window.__t13live = ({ seconds = 30, rotate = true } = {}) => {
+    const start = performance.now();
+    let n = 0;
+    const tMs = () => Math.round(420000 + performance.now() - start);
+    const send = obj => window.__push(Object.assign({ v: 1, t_ms: tMs() }, obj));
+    const info = anlass => send({ typ: 'info', anlass, programm: 't13_live', firmware: 'Testseite', chip_id: 'TEST000000000000',
+      rom_version: 4, imu_ok: true, imu_who_am_i: 108, baro_ok: true, baro_crc_ok: true, flash_ok: true, flash_jedec: 'EF 40 18',
+      lora_ok: true, lora_status: 34, lora_fehler: 0, lora_modus: 'nur Status, sendet nie', achsen: '+X Spitze', welt: 'Z oben',
+      kalib_gyro_x: 0.078, kalib_gyro_y: -0.255, kalib_gyro_z: 0.136, kalib_p0_hpa: 995.79, kalib_vbat_faktor: 1.0 });
+    info('verbunden');
+    const timer = setInterval(() => {
+      n++;
+      const t = (performance.now() - start) / 1000;
+      // Lage: Drehung um Welt-Z (Gier) und langsames Aufrichten der Spitze (Pitch)
+      const yaw = rotate ? t * 0.6 : 0, pitch = rotate ? -Math.min(Math.PI / 2, t * 0.15) : 0;
+      const cy = Math.cos(yaw / 2), sy = Math.sin(yaw / 2), cp = Math.cos(pitch / 2), sp = Math.sin(pitch / 2);
+      const q = { qw: cy * cp, qx: -sy * sp, qy: cy * sp, qz: sy * cp };
+      const tilt = 90 + pitch * 180 / Math.PI;
+      send({ typ: 'imu', ax_g: Math.sin(t * 3) * 0.05, ay_g: Math.cos(t * 2) * 0.04, az_g: 1.0 + Math.sin(t) * 0.02,
+        a_betrag_g: 1.0, a_senkrecht_g: 0.01, gx_dps: Math.sin(t) * 3, gy_dps: rotate ? -8.6 : 0, gz_dps: rotate ? 34.4 : 0,
+        gx_roh_dps: 0.1, gy_roh_dps: -0.3, gz_roh_dps: 0.1, temp_c: 24.9, ...q, neigung_grad: Math.round(tilt * 10) / 10,
+        roll_grad: 0, pitch_grad: Math.round(pitch * 1800 / Math.PI) / 10, gier_grad: Math.round(((yaw * 180 / Math.PI) % 360) * 10) / 10, rate_hz: 101 });
+      if (n % 3 === 0) send({ typ: 'baro', druck_hpa: 996.1, temp_c: 23.7, hoehe_m: -2.68 + Math.sin(t) * 0.1, hoehe_gefiltert_m: -2.13,
+        steigrate_ms: -0.02, p0_hpa: 995.79, d1: 9191026, d2: 8335360 });
+      if (n % 13 === 0) send({ typ: 'analog', vbat_v: 0.01, akku_erkannt: false, pyro1_v: 0.14, pyro2_v: 0.13, pyro1_verhaeltnis: null, pyro2_verhaeltnis: null });
+      if (n % 25 === 0) send({ typ: 'gps', fix: true, fix_qualitaet: 1, satelliten: 8, sichtbar: 11, hdop: 1.0, breite: null, laenge: null,
+        hoehe_m: 104.4, utc: '231337.000', datum: '201126', saetze_ok: 3355 + n, pruefsummenfehler: 0, bytes: 200269 + n * 80 });
+      if (n % 250 === 0) info('regelmaessig');
+      if (t > seconds) clearInterval(timer);
+    }, 40);
+    return () => clearInterval(timer);
   };
 })();
